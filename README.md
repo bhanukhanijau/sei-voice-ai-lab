@@ -1,5 +1,7 @@
 # SEI Voice AI Lab
 
+Live: [sei-voice-ai-lab.vercel.app](https://sei-voice-ai-lab.vercel.app) · [Private GitHub repository](https://github.com/bhanukhanijau/sei-voice-ai-lab)
+
 A small Vapi interview sandbox: the existing voice playground, four hardcoded mock functions, a request/response tester, and URL-based failures. No database, saved sessions, management API, or tool synchronization. Use Vapi's dashboard for assistant settings, tool creation and call logs. The original SEI application is untouched.
 
 ## Local use
@@ -66,7 +68,7 @@ In [Vapi Dashboard](https://dashboard.vapi.ai):
 }
 ```
 
-5. Server URL: your actual production origin plus `/api/tools/webhook?mode=normal`. The app's **Tools & Debugger** and **Vapi Setup** tabs generate the full URL and exact JSON configuration. A public production origin is not yet recorded here; localhost is not reachable by Vapi.
+5. Server URL: `https://sei-voice-ai-lab.vercel.app/api/tools/webhook?mode=normal`. The app's **Tools & Debugger** and **Vapi Setup** tabs generate the full URL and exact JSON configuration. Localhost is not reachable by Vapi.
 6. Create a Vapi **Bearer Token Custom Credential**. Header: `Authorization`, prefix: `Bearer`, token: the same private value as VAPI_WEBHOOK_SECRET on Vercel. Select this credential on the saved tool. Do not put the token in the URL or prompt.
 7. Keep synchronous execution and a 20-second timeout. Optional request-start message: “Let me check that for you.” Request-failed: “I could not retrieve that information. Please try again.”
 8. Open existing assistant `f1adb106-6546-469a-a808-5df31fb1573f` → Tools → add lookup_order. Preserve existing prompt, model, voice and other settings. Save/publish as prompted.
@@ -131,4 +133,4 @@ pnpm build
 pnpm test:http
 ```
 
-HTTP smoke tests never initiate a paid Vapi call. Genuine audio, tool invocation and spoken use of the result require a manual browser call after the native tool is attached. Hosting and live end-to-end results must be verified separately.
+HTTP smoke tests never initiate a paid Vapi call. Genuine audio, tool invocation and spoken use of the result require a manual browser call after the native tool is attached. The public site and authenticated webhook modes were verified on Vercel on 2026-10-27. Nine tests, lint, type checks, production build and GitHub CI passed. A genuine hosted voice/tool conversation remains to be verified after you manually attach lookup_order in Vapi.
