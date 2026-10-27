@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useReducer } from "react";
 import type Vapi from "@vapi-ai/web";
 import {
   AudioLines,
@@ -15,6 +15,13 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import type { Mode } from "@/lib/catalog";
+import { ExecutionTimeline } from "./execution-timeline";
+import {
+  emptyTimeline,
+  normalizeEvent,
+  errorText,
+  type RawEvent,
+} from "@/lib/timeline";
 import { orderAssistantPrompt } from "@/lib/assistant-prompt";
 type Tool = {
   name: string;
@@ -107,7 +114,12 @@ export default function Lab() {
     [elapsed, setElapsed] = useState(0),
     [callId, setCallId] = useState(""),
     [messages, setMessages] = useState<{ role: string; text: string }[]>([]),
-    [events, setEvents] = useState<unknown[]>([]);
+    [timeline, dispatchTimeline] = useReducer(
+      (state: ReturnType<typeof emptyTimeline>, event: RawEvent | null) =>
+        event ? normalizeEvent(state, event) : emptyTimeline(),
+      undefined,
+      emptyTimeline,
+    );
   const sdk = useRef<Vapi | null>(null),
     started = useRef(0);
   async function act(work: () => Promise<void>) {
@@ -149,7 +161,9 @@ export default function Lab() {
     if (!boot) return;
     setState("Connecting");
     setMessages([]);
-    setEvents([]);
+    dispatchTimeline(null);
+    const record = (event: string, payload: unknown = {}) =>
+      dispatchTimeline({ event, payload, receivedAt: Date.now() });
     setCallId("");
     setElapsed(0);
     try {
@@ -159,10 +173,12 @@ export default function Lab() {
       const v = new VapiClient(boot.publicKey);
       sdk.current = v;
       v.on("call-start", () => {
+        record("call-start");
         setState("Connected");
         started.current = Date.now();
       });
       v.on("call-end", () => {
+        record("call-end");
         setState("Disconnected");
         setSpeaking(false);
         setVolume(0);
@@ -171,25 +187,57 @@ export default function Lab() {
       v.on("speech-end", () => setSpeaking(false));
       v.on("volume-level", setVolume);
       v.on("error", (e) => {
-        setError(JSON.stringify(e));
+        record(
+          "error",
+          e instanceof Error
+            ? { message: e.message, name: e.name, stack: e.stack }
+            : e,
+        );
+        setError(errorText(e));
         setState("Disconnected");
       });
       v.on("message", (m) => {
-        setEvents((prev) => [
-          ...prev.slice(-199),
-          { receivedAt: new Date().toISOString(), payload: m },
-        ]);
+        record("message", m);
         if (m.type === "transcript" && m.transcriptType === "final")
           setMessages((prev) => [
             ...prev,
             { role: m.role, text: m.transcript },
           ]);
       });
-      const call = await v.start(boot.assistantId);
+      // The SDK's generated type incorrectly declares a scalar; the Vapi API accepts an array.
+      // Only event subscriptions are overridden. Native tools and model settings stay in Vapi.
+      const subscriptions = [
+        "conversation-update",
+        "function-call",
+        "function-call-result",
+        "hang",
+        "model-output",
+        "speech-update",
+        "status-update",
+        "transfer-update",
+        "transcript",
+        "tool-calls",
+        "tool-calls-result",
+        "user-interrupted",
+        "voice-input",
+        "workflow.node.started",
+        "assistant.started",
+      ];
+      const call = await v.start(boot.assistantId, {
+        clientMessages: subscriptions as unknown as NonNullable<
+          Parameters<Vapi["start"]>[1]
+        >["clientMessages"],
+      });
       if (call?.id) {
         setCallId(call.id);
       }
     } catch (e) {
+      record(
+        "error",
+        e instanceof Error
+          ? { message: e.message, name: e.name, stack: e.stack }
+          : e,
+      );
       sdk.current?.stop();
       setState("Disconnected");
       throw e;
@@ -378,18 +426,7 @@ export default function Lab() {
                   )}
                 </section>
               </div>
-              <section className="panel">
-                <h2>Events received from Vapi</h2>
-                <p>
-                  Only actual SDK events appear here. Find call history and
-                  webhook logs in the Vapi dashboard.
-                </p>
-                {events.length ? (
-                  <Json value={events} />
-                ) : (
-                  <p>No events received yet.</p>
-                )}
-              </section>
+              <ExecutionTimeline timeline={timeline} callId={callId} />
             </>
           )}
           {page === "Tools & Debugger" && (

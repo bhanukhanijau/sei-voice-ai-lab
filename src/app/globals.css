@@ -708,3 +708,233 @@ footer {
     display: none;
   }
 }
+
+/* Call execution evidence; scoped to the existing Playground event panel. */
+.timeline-controls {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.timeline-controls [aria-pressed="true"] {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.timeline-note {
+  font-size: 11px;
+  margin: 8px 0 14px;
+}
+.execution-scroll {
+  max-height: 580px;
+  overflow-y: auto;
+  overflow-anchor: none;
+  padding-right: 8px;
+}
+.execution-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.execution-entry {
+  display: flex;
+  gap: 14px;
+  position: relative;
+  padding: 0 0 20px;
+}
+.execution-entry::before {
+  content: "";
+  position: absolute;
+  top: 30px;
+  bottom: 0;
+  left: 14px;
+  width: 1px;
+  background: var(--line);
+}
+.execution-entry:last-child::before {
+  display: none;
+}
+.execution-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+  background: var(--input);
+}
+.execution-entry.user .execution-icon {
+  color: #93bbef;
+}
+.execution-entry.assistant .execution-icon,
+.execution-entry.success .execution-icon {
+  color: var(--accent);
+}
+.execution-entry.tool .execution-icon {
+  border-radius: 7px;
+  color: #c8adf2;
+}
+.execution-entry.error .execution-icon {
+  color: #f4a4ad;
+}
+.execution-entry.error {
+  background: none;
+}
+.execution-content {
+  flex: 1;
+  min-width: 0;
+  padding-top: 3px;
+}
+.execution-entry.tool .execution-content {
+  background: var(--input);
+  border: 1px solid var(--line);
+  padding: 12px 15px;
+  border-radius: 8px;
+}
+.execution-entry.tool.error .execution-content {
+  border-color: #73313c;
+}
+.execution-title {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  justify-content: space-between;
+}
+.execution-title strong {
+  font-size: 12px;
+  color: var(--text);
+}
+.execution-title time {
+  font:
+    10px ui-monospace,
+    monospace;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.execution-speech {
+  margin: 6px 0 0;
+  color: var(--text);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.execution-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.execution-status.success {
+  color: var(--accent);
+}
+.execution-status.error {
+  background: none;
+  color: #f4a4ad;
+}
+.argument-summary {
+  font-size: 11px;
+  margin-top: 9px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+}
+.argument-summary code {
+  color: var(--text);
+  font-size: 11px;
+}
+.business-result {
+  margin: 10px 0 0;
+  display: grid;
+  gap: 3px;
+}
+.business-result > div {
+  display: grid;
+  grid-template-columns: minmax(100px, 150px) 1fr;
+  gap: 12px;
+}
+.business-result dt,
+.business-result dd {
+  margin: 0;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.execution-error {
+  color: #f4a4ad;
+  font-size: 11px;
+  margin: 8px 0;
+}
+.execution-error p {
+  color: inherit;
+  margin: 3px 0;
+}
+.event-details {
+  margin-top: 9px;
+  padding-top: 7px;
+  border: 0;
+}
+.event-details summary {
+  font-size: 10px;
+}
+.event-details pre,
+.raw-call-events {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--input);
+  padding: 12px;
+  border-radius: 6px;
+}
+.event-details pre {
+  max-height: 300px;
+  overflow-y: auto;
+}
+.timeline-live {
+  padding: 6px 0 12px 44px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.timeline-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--muted);
+}
+.timeline-footer a {
+  margin-left: auto;
+}
+.timeline-empty {
+  text-align: center;
+  padding: 28px 12px;
+  color: var(--muted);
+}
+.timeline-empty svg {
+  margin: 0 auto 10px;
+}
+.timeline-empty p {
+  margin: 0;
+  font-size: 12px;
+}
+@media (max-width: 780px) {
+  .execution-panel .panel-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .business-result > div {
+    grid-template-columns: 100px 1fr;
+  }
+}
+.execution-entry.business-error .execution-content {
+  border-color: #886b37;
+}
+.execution-entry.business-error .execution-icon,
+.execution-status.business-error,
+.execution-entry.business-error .execution-error {
+  color: #d7ae65;
+}
