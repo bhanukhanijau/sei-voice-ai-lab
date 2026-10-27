@@ -14,16 +14,15 @@ test -f .env.local || cp .env.example .env.local
 pnpm dev
 ```
 
-On this machine `./scripts/dev-local.sh` also finds the bundled Node runtime. Open http://localhost:3000. Use ADMIN_PASSWORD from the ignored `.env.local` file. Existing public key, assistant ID and voice SDK integration are preserved. The shared password is kept only in page memory and sent through HTTP Basic authentication to the lab API. Reloading locks the page. Use HTTPS when hosted.
+On this machine `./scripts/dev-local.sh` also finds the bundled Node runtime. Open http://localhost:3000 to go directly to the playground. No password or login is required. Existing public key, assistant ID and voice SDK integration are preserved.
 
-| Variable                      | Purpose                                                      |
-| ----------------------------- | ------------------------------------------------------------ |
-| NEXT_PUBLIC_VAPI_PUBLIC_KEY   | Existing Vapi public Web SDK key                             |
-| NEXT_PUBLIC_VAPI_ASSISTANT_ID | Existing assistant ID                                        |
-| ADMIN_PASSWORD                | One private lab password; protects SDK settings and debugger |
-| APP_BASE_URL                  | Actual production origin; localhost for development          |
+| Variable                      | Purpose                                             |
+| ----------------------------- | --------------------------------------------------- |
+| NEXT_PUBLIC_VAPI_PUBLIC_KEY   | Existing Vapi public Web SDK key                    |
+| NEXT_PUBLIC_VAPI_ASSISTANT_ID | Existing assistant ID                               |
+| APP_BASE_URL                  | Actual production origin; localhost for development |
 
-No private Vapi API key is required. Old DATABASE_URL, SESSION_SECRET and VAPI_PRIVATE_API_KEY variables are unused; they need not be deployed. Local environment files are preserved, ignored by Git, and excluded from Vercel uploads. Do not paste secrets into chat or commit them.
+No private Vapi API key is required. Old ADMIN_PASSWORD, DATABASE_URL, SESSION_SECRET and VAPI_PRIVATE_API_KEY variables are unused; they need not be deployed. Local environment files are preserved, ignored by Git, and excluded from Vercel uploads. Do not paste secrets into chat or commit them.
 
 ## GitHub → Vercel
 

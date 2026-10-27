@@ -29,6 +29,15 @@ async function send(mode: string) {
 }
 assert.equal((await fetch(base)).status, 200);
 assert.equal((await fetch(base + "/api/health")).status, 200);
+const config = await fetch(base + "/api/config");
+assert.equal(config.status, 200);
+assert.equal((await config.json()).tools.length, 4);
+const debuggerResponse = await fetch(base + "/api/test", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify(body),
+});
+assert.equal(debuggerResponse.status, 200);
 const normal = await send("normal");
 assert.equal(normal.status, 200);
 const data = await normal.json();
@@ -46,5 +55,5 @@ assert.equal(malformed.status, 200);
 assert.ok(!(await malformed.json()).results);
 assert.equal((await send("normal")).status, 200);
 console.log(
-  "HTTP smoke passed: website, health, public no-auth webhook, batched IDs, business error, malformed envelope, HTTP 500, and normal recovery. No paid voice call made.",
+  "HTTP smoke passed: website, password-free config and debugger, health, public no-auth webhook, batched IDs, business error, malformed envelope, HTTP 500, and normal recovery. No paid voice call made.",
 );

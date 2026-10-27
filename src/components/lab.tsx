@@ -31,6 +31,12 @@ type Config = {
   modeDescriptions: Record<Mode, string>;
   configs: unknown[];
 };
+async function fetchConfig(signal?: AbortSignal): Promise<Config> {
+  const response = await fetch("/api/config", { signal });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.error || "Cannot load lab");
+  return data;
+}
 function Json({ value }: { value: unknown }) {
   const [copied, setCopied] = useState(false);
   return (
@@ -88,7 +94,6 @@ function PromptInstructions() {
 
 export default function Lab() {
   const [boot, setBoot] = useState<Config | null>(null),
-    [password, setPassword] = useState(""),
     [error, setError] = useState(""),
     [page, setPage] = useState("Playground"),
     [busy, setBusy] = useState(false);
@@ -105,7 +110,6 @@ export default function Lab() {
     [events, setEvents] = useState<unknown[]>([]);
   const sdk = useRef<Vapi | null>(null),
     started = useRef(0);
-  const auth = () => "Basic " + btoa("lab:" + password);
   async function act(work: () => Promise<void>) {
     setError("");
     setBusy(true);
@@ -117,14 +121,16 @@ export default function Lab() {
       setBusy(false);
     }
   }
-  async function signIn() {
-    const response = await fetch("/api/config", {
-      headers: { Authorization: auth() },
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Cannot load lab");
-    setBoot(data);
-  }
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchConfig(controller.signal)
+      .then(setBoot)
+      .catch((error) => {
+        if (!controller.signal.aborted)
+          setError(error instanceof Error ? error.message : "Cannot load lab");
+      });
+    return () => controller.abort();
+  }, []);
   useEffect(
     () => () => {
       sdk.current?.stop();
@@ -193,47 +199,26 @@ export default function Lab() {
   const selected = boot?.tools.find((t) => t.name === tool);
   if (!boot)
     return (
-      <main className="login">
-        <div className="login-card">
-          <div className="brand">
-            <Mountain size={32} />
-            <strong>
-              SEI <span>VOICE AI LAB</span>
-            </strong>
-          </div>
-          <h1>Your Vapi practice sandbox.</h1>
-          <p>
-            Voice calls, four mock tools, and a few useful ways to break them.
-          </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              void act(signIn);
-            }}
-          >
-            <label>
-              Lab password
-              <input
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </label>
-            <Button variant="default" disabled={busy}>
-              Open lab <ChevronRight size={16} />
-            </Button>
-          </form>
+      <main className="loading">
+        <div className="loading-card">
+          <h1>
+            {error ? "Unable to load the lab" : "Loading SEI Voice AI Lab…"}
+          </h1>
           {error && (
-            <p role="alert" className="error">
-              {error}
-            </p>
+            <>
+              <p role="alert" className="error">
+                {error}
+              </p>
+              <Button
+                disabled={busy}
+                onClick={() =>
+                  void act(async () => setBoot(await fetchConfig()))
+                }
+              >
+                Try again
+              </Button>
+            </>
           )}
-          <small>
-            Set ADMIN_PASSWORD in .env.local. No database or account setup
-            needed.
-          </small>
         </div>
       </main>
     );
@@ -271,15 +256,6 @@ export default function Lab() {
         </nav>
         <div className="aside-footer">
           Fictional SEI data<p>No database · No saved sessions</p>
-          <Button
-            onClick={() => {
-              sdk.current?.stop();
-              setBoot(null);
-              setPassword("");
-            }}
-          >
-            Lock lab
-          </Button>
         </div>
       </aside>
       <div className="workspace">
@@ -478,9 +454,9 @@ export default function Lab() {
               <section className="panel">
                 <h2>Test request / response</h2>
                 <p>
-                  This executes the same adapter as the public webhook, using
-                  your lab password. It does not call the voice assistant.
-                  Nothing is saved.
+                  This executes the same adapter as the public webhook and
+                  displays its actual response. It does not call the voice
+                  assistant. Nothing is saved.
                 </p>
                 <label>
                   Arguments
@@ -515,7 +491,6 @@ export default function Lab() {
                       const response = await fetch("/api/test?mode=" + mode, {
                         method: "POST",
                         headers: {
-                          Authorization: auth(),
                           "Content-Type": "application/json",
                         },
                         body: JSON.stringify(payload),

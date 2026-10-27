@@ -612,28 +612,22 @@ footer {
   display: flex;
   justify-content: space-between;
 }
-.login {
+.loading {
   min-height: 100vh;
   display: grid;
   place-items: center;
 }
-.login-card {
+.loading-card {
   width: min(460px, 100%);
   padding: 36px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--panel);
 }
-.login .brand {
-  margin-left: 0;
-}
-.login h1 {
+.loading h1 {
   font-size: 27px;
 }
-.login form {
-  margin: 30px 0;
-}
-.login .btn {
+.loading .btn {
   width: 100%;
 }
 .muted {

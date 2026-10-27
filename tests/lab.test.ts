@@ -4,7 +4,6 @@ import { executeBusiness } from "../src/lib/business";
 import { tools } from "../src/lib/catalog";
 import { handleToolCalls } from "../src/lib/engine";
 import { GET, POST } from "../src/app/api/[...path]/route";
-process.env.ADMIN_PASSWORD = "test-only-lab-password";
 const call = (
   id: string,
   name = "lookup_order",
@@ -17,10 +16,10 @@ const payload = (calls = [call("one")]) => ({
     toolCallList: calls,
   },
 });
-const req = (path: string, body?: unknown, auth = "") =>
+const req = (path: string, body?: unknown) =>
   new Request("http://localhost/api/" + path, {
     method: body === undefined ? "GET" : "POST",
-    headers: { Authorization: auth, "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 test("four mock business functions return expected hardcoded data", () => {
@@ -116,14 +115,15 @@ test("each query mode changes actual webhook HTTP response and has no persisted 
   assert.equal(normal.status, 200);
   assert.match(JSON.stringify(await normal.json()), /shipped/);
 });
-test("fictional webhook is public while lab config and debugger keep the shared password", async () => {
+test("playground config and debugger work without a password and expose only public settings", async () => {
+  const config = await GET(req("config"));
+  assert.equal(config.status, 200);
+  const data = await config.json();
+  assert.equal(data.tools.length, 4);
+  assert.ok(!("ADMIN_PASSWORD" in data));
+  assert.ok(!("VAPI_PRIVATE_API_KEY" in data));
+  assert.equal((await POST(req("test", payload()))).status, 200);
   assert.equal((await POST(req("tools/webhook", payload()))).status, 200);
-  assert.equal((await GET(req("config"))).status, 401);
-  assert.equal((await POST(req("test", payload()))).status, 401);
-  const basic =
-    "Basic " + Buffer.from("lab:test-only-lab-password").toString("base64");
-  assert.equal((await GET(req("config", undefined, basic))).status, 200);
-  assert.equal((await POST(req("test", payload(), basic))).status, 200);
   assert.equal((await GET(req("health"))).status, 200);
 });
 test("malformed requests, invalid modes, duplicate IDs and invalid JSON are rejected", async () => {

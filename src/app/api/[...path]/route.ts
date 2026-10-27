@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { labAuth } from "@/lib/security";
 import { tools, modes, modeDescriptions, toolConfigs } from "@/lib/catalog";
 import { handleToolCalls, parseMode } from "@/lib/engine";
 export const runtime = "nodejs";
@@ -16,9 +15,6 @@ async function handle(req: Request) {
     path = url.pathname.replace("/api/", "");
   if (path === "health") return json({ status: "ok", storage: "none" });
   const webhook = path === "tools/webhook";
-  // These four read-only fictional tools are public, as requested.
-  if (!webhook && !labAuth(req))
-    return json({ error: "Enter the lab password" }, 401);
   try {
     if (path === "config" && req.method === "GET") {
       // Read public SDK settings at runtime so Vercel environment updates apply.
