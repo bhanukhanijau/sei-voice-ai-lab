@@ -8,13 +8,19 @@ import {
   ChevronRight,
   Headphones,
   Mic,
-  Mountain,
   PhoneOff,
   Play,
   Sun,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import type { Mode } from "@/lib/catalog";
+import Image from "next/image";
+import { Conversation } from "./conversation";
+import {
+  DemoGuide,
+  microphoneMessage,
+  type OrderReference,
+} from "./demo-guide";
 import { ExecutionTimeline } from "./execution-timeline";
 import {
   emptyTimeline,
@@ -99,7 +105,11 @@ function PromptInstructions() {
   );
 }
 
-export default function Lab() {
+export default function Lab({
+  orderReference,
+}: {
+  orderReference: OrderReference[];
+}) {
   const [boot, setBoot] = useState<Config | null>(null),
     [error, setError] = useState(""),
     [page, setPage] = useState("Playground"),
@@ -271,15 +281,20 @@ export default function Lab() {
       </main>
     );
   return (
-    <div className="app">
+    <div className={`app ${page === "Playground" ? "playground-app" : ""}`}>
       <aside>
         <div className="brand">
-          <Mountain />
+          <Image
+            src="/brand/sei-mark.svg"
+            alt="SEI mountain logo"
+            width={36}
+            height={36}
+          />
           <strong>
-            SEI <span>VOICE AI LAB</span>
+            SEI <span>SUPER EQUIPMENT INC.</span>
           </strong>
         </div>
-        <p className="nav-label">PRACTICE WORKSPACE</p>
+        <p className="nav-label">READY FOR OUTSIDE.</p>
         <nav>
           {[
             ["Playground", Headphones],
@@ -330,103 +345,121 @@ export default function Lab() {
           </div>
         </header>
         <main>
-          <div className="heading">
-            <div>
-              <div className="eyebrow">LEARN BY TROUBLESHOOTING</div>
-              <h1>{page}</h1>
-              <p>
-                Use Vapi for configuration and logs. Use this lab to talk and
-                test.
-              </p>
+          {page === "Playground" ? (
+            <div className="playground-intro">
+              <div>
+                <div className="eyebrow">READY FOR OUTSIDE. HERE TO HELP.</div>
+                <h1>
+                  SEI Outdoors <span>— AI Support Demo</span>
+                </h1>
+                <p>
+                  Talk to our AI support agent about orders, returns, and
+                  outdoor gear. Watch the tools work in real time.
+                </p>
+              </div>
+              <span className="fictional-label">
+                Fictional orders & customer data
+              </span>
             </div>
-          </div>
-          {error && (
+          ) : (
+            <div className="heading">
+              <div>
+                <div className="eyebrow">LEARN BY TROUBLESHOOTING</div>
+                <h1>{page}</h1>
+                <p>
+                  Use Vapi for configuration and logs. Use this lab to talk and
+                  test.
+                </p>
+              </div>
+            </div>
+          )}
+          {error && page !== "Playground" && (
             <div className="alert error" role="alert">
               {error}
             </div>
           )}
           {page === "Playground" && (
             <>
-              <div className="grid playground">
-                <section className="panel voice">
-                  <div className="panel-head">
-                    <h2>Voice playground</h2>
-                    <span className="badge">Official Vapi SDK</span>
-                  </div>
-                  <div
-                    className={"orb " + (state === "Connected" ? "live" : "")}
-                  >
-                    <AudioLines size={55} strokeWidth={1.2} />
-                  </div>
-                  <h2>
+              <section
+                className={`call-bar ${error ? "has-error" : ""}`}
+                aria-label="Voice call controls"
+              >
+                <div
+                  className={`agent-avatar ${state === "Connected" ? "connected" : ""}`}
+                >
+                  <AudioLines size={23} />
+                </div>
+                <div className="agent-name">
+                  <strong>SEI Support Agent</strong>
+                  <span>
+                    <i
+                      className={`connection-dot ${state === "Connected" ? "connected" : ""}`}
+                    />
                     {state === "Connected"
                       ? speaking
                         ? "Assistant speaking"
                         : "Listening to you"
                       : state === "Connecting"
                         ? "Connecting…"
-                        : "Ready when you are"}
-                  </h2>
-                  <p>SEI Outdoor Support</p>
-                  <div className="mono">
-                    {String(Math.floor(elapsed / 60)).padStart(2, "0")}:
-                    {String(elapsed % 60).padStart(2, "0")} · {state}
-                  </div>
+                        : "Ready to talk"}
+                    <span className="connection-state"> · {state}</span>
+                  </span>
+                </div>
+                <div className="call-meter">
                   <meter
                     min={0}
                     max={1}
                     value={volume}
                     aria-label="Assistant audio level"
                   />
-                  <div className="actions">
-                    <Button
-                      variant="default"
-                      disabled={
-                        busy || state !== "Disconnected" || !boot.publicKey
-                      }
-                      onClick={() => void act(start)}
-                    >
-                      <Mic size={16} /> Start call
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      disabled={state === "Disconnected"}
-                      onClick={() => {
-                        sdk.current?.stop();
-                        setState("Disconnected");
-                      }}
-                    >
-                      <PhoneOff size={16} /> End call
-                    </Button>
-                  </div>
-                  <small>Microphone required · Calls use Vapi credits</small>
-                  {callId && <p className="mono">Call ID: {callId}</p>}
-                </section>
-                <section className="panel transcript">
-                  <div className="panel-head">
-                    <h2>Live transcript</h2>
-                    <span className="badge">{messages.length} messages</span>
-                  </div>
-                  {messages.length ? (
-                    messages.map((m, i) => (
-                      <div className={"bubble " + m.role} key={i}>
-                        <small>{m.role.toUpperCase()}</small>
-                        <p>{m.text}</p>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="empty">
-                      <AudioLines size={32} />
-                      <h3>Start a real voice conversation</h3>
-                      <p>“Can you check order 123?”</p>
-                      <small>
-                        Create and attach lookup_order in Vapi first.
-                      </small>
-                    </div>
+                  <span>Live audio</span>
+                </div>
+                <span className="call-duration mono" aria-label="Call duration">
+                  {String(Math.floor(elapsed / 60)).padStart(2, "0")}:
+                  {String(elapsed % 60).padStart(2, "0")}
+                </span>
+                <div className="call-actions">
+                  <Button
+                    variant="default"
+                    disabled={
+                      busy || state !== "Disconnected" || !boot.publicKey
+                    }
+                    onClick={() => void act(start)}
+                  >
+                    <Mic size={15} />
+                    Start call
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    disabled={state === "Disconnected"}
+                    onClick={() => {
+                      sdk.current?.stop();
+                      setState("Disconnected");
+                    }}
+                  >
+                    <PhoneOff size={15} />
+                    End call
+                  </Button>
+                </div>
+                <div className="call-hint">
+                  <span>Microphone required · Uses Vapi credits</span>
+                  {callId && (
+                    <span className="mono" title={callId}>
+                      Call: {callId}
+                    </span>
                   )}
-                </section>
+                </div>
+                {error && (
+                  <div className="call-permission-error" role="alert">
+                    {microphoneMessage(error)}
+                  </div>
+                )}
+              </section>
+              <DemoGuide orders={orderReference} />
+              <div className="playground-workspace">
+                <Conversation messages={messages} />
+                <ExecutionTimeline timeline={timeline} callId={callId} />
               </div>
-              <ExecutionTimeline timeline={timeline} callId={callId} />
             </>
           )}
           {page === "Tools & Debugger" && (
