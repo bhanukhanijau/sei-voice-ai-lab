@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { labAuth, webhookAuth } from "@/lib/security";
+import { labAuth } from "@/lib/security";
 import { tools, modes, modeDescriptions, toolConfigs } from "@/lib/catalog";
 import { handleToolCalls, parseMode } from "@/lib/engine";
 export const runtime = "nodejs";
@@ -16,10 +16,8 @@ async function handle(req: Request) {
     path = url.pathname.replace("/api/", "");
   if (path === "health") return json({ status: "ok", storage: "none" });
   const webhook = path === "tools/webhook";
-  if (webhook) {
-    if (!webhookAuth(req))
-      return json({ error: "Vapi Bearer credential required" }, 401);
-  } else if (!labAuth(req))
+  // These four read-only fictional tools are public, as requested.
+  if (!webhook && !labAuth(req))
     return json({ error: "Enter the lab password" }, 401);
   try {
     if (path === "config" && req.method === "GET") {
@@ -30,7 +28,6 @@ async function handle(req: Request) {
         publicKey: env["NEXT_PUBLIC_VAPI_PUBLIC_KEY"] || "",
         assistantId: env["NEXT_PUBLIC_VAPI_ASSISTANT_ID"] || "",
         baseUrl: base,
-        webhookConfigured: !!env.VAPI_WEBHOOK_SECRET,
         tools: Object.entries(tools).map(([name, t]) => ({
           name,
           description: t.description,
@@ -39,11 +36,7 @@ async function handle(req: Request) {
         })),
         modes,
         modeDescriptions,
-        configs: toolConfigs(
-          base,
-          "normal",
-          env.VAPI_CREDENTIAL_ID || undefined,
-        ),
+        configs: toolConfigs(base, "normal"),
       });
     }
     if ((webhook || path === "test") && req.method === "POST") {

@@ -11,10 +11,3 @@ export function labAuth(req: Request) {
   const expected = "Basic " + Buffer.from("lab:" + password).toString("base64");
   return equal(req.headers.get("authorization") || "", expected);
 }
-export function webhookAuth(req: Request) {
-  const secret = process.env.VAPI_WEBHOOK_SECRET;
-  return (
-    !!secret &&
-    equal(req.headers.get("authorization") || "", "Bearer " + secret)
-  );
-}

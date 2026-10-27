@@ -43,11 +43,7 @@ export const modeDescriptions: Record<Mode, string> = {
   malformed: "HTTP 200 with an intentionally invalid Vapi response envelope.",
   http500: "Return a genuine HTTP 500 instead of a tool result.",
 };
-export function toolConfigs(
-  base: string,
-  mode: Mode = "normal",
-  credentialId = "<VAPI_BEARER_CREDENTIAL_ID>",
-) {
+export function toolConfigs(base: string, mode: Mode = "normal") {
   return Object.entries(tools).map(([name, t]) => ({
     type: "function",
     function: {
@@ -57,7 +53,6 @@ export function toolConfigs(
     },
     server: {
       url: `${base}/api/tools/webhook?mode=${mode}`,
-      credentialId,
       timeoutSeconds: 20,
     },
     messages: [

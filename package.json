@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write src scripts tests README.md *.json *.ts *.mjs",
-    "test:http": "node --env-file=.env.local --import tsx scripts/http-smoke.ts"
+    "test:http": "node --import tsx scripts/http-smoke.ts"
   },
   "dependencies": {
     "next": "latest",

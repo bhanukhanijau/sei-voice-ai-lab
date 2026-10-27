@@ -25,7 +25,6 @@ type Config = {
   publicKey: string;
   assistantId: string;
   baseUrl: string;
-  webhookConfigured: boolean;
   tools: Tool[];
   modes: Mode[];
   modeDescriptions: Record<Mode, string>;
@@ -428,11 +427,6 @@ export default function Lab() {
                   only prepares a URL and a local test; it does not update Vapi.
                 </p>
                 <Json value={{ serverUrl: endpoint }} />
-                {!boot.webhookConfigured && (
-                  <div className="alert error">
-                    Set VAPI_WEBHOOK_SECRET before testing the public webhook.
-                  </div>
-                )}
                 <details>
                   <summary>Function parameters and example</summary>
                   <Json
@@ -517,9 +511,9 @@ export default function Lab() {
                   </p>
                 ))}
                 <p>
-                  All webhook modes require your saved Vapi Bearer credential.
-                  One mode applies to the whole HTTP request, including batched
-                  tool calls.
+                  All webhook modes work without authentication. One mode
+                  applies to the whole HTTP request, including batched tool
+                  calls.
                 </p>
               </section>
             </>
@@ -541,9 +535,8 @@ export default function Lab() {
                     <code>{boot.baseUrl}/api/tools/webhook?mode=normal</code>.
                   </li>
                   <li>
-                    Create a Bearer Token Custom Credential with header
-                    Authorization and Bearer prefix. Its token must match
-                    VAPI_WEBHOOK_SECRET on Vercel. Select it on the tool.
+                    Leave Authentication set to None. These are public,
+                    read-only fictional tools.
                   </li>
                   <li>
                     Keep synchronous execution and a 20-second timeout.
@@ -560,9 +553,7 @@ export default function Lab() {
                 </ol>
                 <Json value={boot.configs[0]} />
                 <p>
-                  The credential ID placeholder is replaced with your saved Vapi
-                  credential ID. Do not paste the token into a prompt or the
-                  URL.
+                  No token or credential is needed on this mock tool endpoint.
                 </p>
                 <p>
                   Assistant: <code>{boot.assistantId}</code>
