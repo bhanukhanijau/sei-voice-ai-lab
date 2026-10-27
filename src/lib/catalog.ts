@@ -3,21 +3,37 @@ const text = z.string().trim().min(1).max(100);
 export const tools = {
   lookup_order: {
     description:
-      "Look up a fictional SEI order by order number. Ask for the order number first; never guess it.",
-    schema: z.object({ orderNumber: text }),
-    example: { orderNumber: "SEI-1001" },
+      "Look up a fictional SEI order using its three-digit order_number string. Ask the caller to say each digit separately if missing or unclear; never guess.",
+    schema: z.object({
+      order_number: text.describe(
+        "Three-digit order number as a string, for example 123. Ask for separate digits if unclear.",
+      ),
+    }),
+    example: { order_number: "123" },
   },
   check_return_eligibility: {
     description:
-      "Check the fictional 90-day return policy for an order before offering a return.",
-    schema: z.object({ orderNumber: text }),
-    example: { orderNumber: "SEI-1002" },
+      "Check the 30-day return eligibility for a fictional SEI order using its three-digit order_number string. Use this tool for return questions; it does not create a return.",
+    schema: z.object({
+      order_number: text.describe(
+        "Three-digit order number as a string, for example 123. Ask for separate digits if unclear.",
+      ),
+    }),
+    example: { order_number: "123" },
   },
   check_inventory: {
     description:
-      "Check fictional product stock by product ID. Ask for the product ID if unknown.",
-    schema: z.object({ productId: text }),
-    example: { productId: "P-04" },
+      "Check fictional stock for a product_name, optionally narrowed by size and color. Ask which product is wanted; clarify variants before promising a particular size or color.",
+    schema: z.object({
+      product_name: text.describe(
+        "Product name, such as snowboard boots, hiking backpack, camping tent, ski jacket, or snowboard.",
+      ),
+      size: text
+        .optional()
+        .describe("Requested size, such as 10, M, or 156 cm, if supplied."),
+      color: text.optional().describe("Requested color, if supplied."),
+    }),
+    example: { product_name: "Snowboard boots", size: "10", color: "Black" },
   },
   get_membership_details: {
     description:

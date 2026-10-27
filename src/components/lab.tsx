@@ -59,11 +59,11 @@ function PromptInstructions() {
   const [copied, setCopied] = useState(false);
   return (
     <section className="panel">
-      <h2>Give the assistant order-lookup instructions</h2>
+      <h2>Give the assistant instructions for all three tools</h2>
       <p>
-        In Vapi, open your SEI assistant and check that lookup_order is selected
-        in its Tools tab. A tool saved in the library must also be attached to
-        the assistant.
+        In Vapi, open your SEI assistant and check that lookup_order,
+        check_return_eligibility, and check_inventory are selected in its Tools
+        tab. A tool saved in the library must also be attached to the assistant.
       </p>
       <p>
         Save a copy of the current system prompt, then use this starter prompt
@@ -84,9 +84,9 @@ function PromptInstructions() {
         {copied ? "Copied" : "Copy system prompt"}
       </Button>
       <p>
-        Try “Check order SEI-1001.” In Vapi Calls → Messages, verify a
-        lookup_order invocation with orderNumber SEI-1001 appears before the
-        spoken answer. A prompt cannot enable a tool that is not attached.
+        Try “Check order 123.” In Vapi Calls → Messages, verify a lookup_order
+        invocation with order_number 123 appears before the spoken answer. A
+        prompt cannot enable a tool that is not attached.
       </p>
     </section>
   );
@@ -99,7 +99,7 @@ export default function Lab() {
     [busy, setBusy] = useState(false);
   const [tool, setTool] = useState("lookup_order"),
     [mode, setMode] = useState<Mode>("normal"),
-    [args, setArgs] = useState('{"orderNumber":"SEI-1001"}'),
+    [args, setArgs] = useState('{"order_number":"123"}'),
     [test, setTest] = useState<unknown>(null);
   const [state, setState] = useState("Disconnected"),
     [speaking, setSpeaking] = useState(false),
@@ -370,7 +370,7 @@ export default function Lab() {
                     <div className="empty">
                       <AudioLines size={32} />
                       <h3>Start a real voice conversation</h3>
-                      <p>“Can you check order SEI-1001?”</p>
+                      <p>“Can you check order 123?”</p>
                       <small>
                         Create and attach lookup_order in Vapi first.
                       </small>
@@ -535,14 +535,16 @@ export default function Lab() {
             <>
               <PromptInstructions />
               <section className="panel">
-                <h2>Create lookup_order manually</h2>
+                <h2>Update lookup_order and add the two tools</h2>
                 <ol>
                   <li>
                     In Vapi Dashboard, open Tools → Create Tool → Function.
                   </li>
                   <li>
-                    Set the function name to <code>lookup_order</code> and copy
-                    the description and parameters below.
+                    For the existing lookup_order, update its parameters to
+                    require order_number as a string. Create
+                    check_return_eligibility and check_inventory using the exact
+                    configurations below.
                   </li>
                   <li>
                     Set Server URL to{" "}
@@ -557,15 +559,30 @@ export default function Lab() {
                     Save/publish the tool.
                   </li>
                   <li>
-                    Open your existing assistant, add lookup_order in Tools,
-                    preserve existing settings, then save/publish.
+                    Open your existing assistant, add the two new tools
+                    alongside lookup_order in Tools, preserve existing settings,
+                    then save/publish.
                   </li>
                   <li>
-                    Start a call and ask to track SEI-1001. Compare the spoken
-                    status with the webhook result in Vapi Calls.
+                    Start a call and ask to track 123. Compare the spoken status
+                    with the webhook result in Vapi Calls.
                   </li>
                 </ol>
-                <Json value={boot.configs[0]} />
+                <p>
+                  The backend also accepts the previous orderNumber argument,
+                  but the new prompt uses order_number. Update the existing
+                  native schema before testing the new prompt. All values are
+                  strings.
+                </p>
+                {boot.configs.slice(0, 3).map((config, index) => (
+                  <details key={boot.tools[index].name}>
+                    <summary>
+                      {boot.tools[index].name} — exact native Function
+                      configuration
+                    </summary>
+                    <Json value={config} />
+                  </details>
+                ))}
                 <p>
                   No token or credential is needed on this mock tool endpoint.
                 </p>
@@ -576,14 +593,15 @@ export default function Lab() {
               <section className="panel">
                 <h2>Try these phrases</h2>
                 <ul>
-                  <li>“Can you check the status of order SEI-1001?”</li>
-                  <li>“Is order SEI-1002 eligible for a return?”</li>
-                  <li>“Do you have product P-04 in stock?”</li>
-                  <li>“What benefits does customer C-01 have?”</li>
+                  <li>“Can you check the status of order 123?”</li>
+                  <li>“Is order 123 eligible for a return?”</li>
+                  <li>“Do you have snowboard boots in size ten, black?”</li>
+                  <li>“Check order 999.” (missing record)</li>
                 </ul>
                 <p>
-                  Only attached tools can be called. Configure the other three
-                  after lookup_order works.
+                  Only attached tools can be called. Save/publish all three
+                  assignments and paste the updated system prompt into Vapi
+                  manually.
                 </p>
                 <h2>Troubleshooting exercises</h2>
                 <ol>

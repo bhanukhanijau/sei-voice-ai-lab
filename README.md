@@ -1,10 +1,10 @@
 # SEI Voice AI Lab
 
-Live: [sei-voice-ai-lab.vercel.app](https://sei-voice-ai-lab.vercel.app) · [Private GitHub repository](https://github.com/bhanukhanijau/sei-voice-ai-lab)
+Live: [sei-voice-ai-lab.vercel.app](https://sei-voice-ai-lab.vercel.app) · [Existing private GitHub repository](https://github.com/bhanukhanijau/sei-voice-ai-lab)
 
-A small Vapi interview sandbox: the existing voice playground, four hardcoded mock functions, a request/response tester, and URL-based failures. No database, saved sessions, management API, or tool synchronization. Use Vapi's dashboard for assistant settings, tool creation and call logs. The original SEI application is untouched.
+A small interview sandbox with working Vapi browser voice, hardcoded SEI data, a request/response tester, and URL-based failures. No passwords, databases, saved sessions, or configuration syncing. Vapi owns native tools and assistant settings. The original SEI application is untouched. Existing membership support is retained; this expansion focuses on the three tools below.
 
-## Local use
+## Local use and deployment
 
 Requires Node 22+ and pnpm 11+.
 
@@ -14,133 +14,202 @@ test -f .env.local || cp .env.example .env.local
 pnpm dev
 ```
 
-On this machine `./scripts/dev-local.sh` also finds the bundled Node runtime. Open http://localhost:3000 to go directly to the playground. No password or login is required. Existing public key, assistant ID and voice SDK integration are preserved.
+On this machine, `./scripts/dev-local.sh` finds the bundled Node runtime. Open http://localhost:3000 directly; no login is required.
 
-| Variable                      | Purpose                                             |
-| ----------------------------- | --------------------------------------------------- |
-| NEXT_PUBLIC_VAPI_PUBLIC_KEY   | Existing Vapi public Web SDK key                    |
-| NEXT_PUBLIC_VAPI_ASSISTANT_ID | Existing assistant ID                               |
-| APP_BASE_URL                  | Actual production origin; localhost for development |
+| Environment variable          | Purpose                                                                     |
+| ----------------------------- | --------------------------------------------------------------------------- |
+| NEXT_PUBLIC_VAPI_PUBLIC_KEY   | Existing public Web SDK key                                                 |
+| NEXT_PUBLIC_VAPI_ASSISTANT_ID | Existing assistant ID                                                       |
+| APP_BASE_URL                  | https://sei-voice-ai-lab.vercel.app in production; localhost in development |
 
-No private Vapi API key is required. Old ADMIN_PASSWORD, DATABASE_URL, SESSION_SECRET and VAPI_PRIVATE_API_KEY variables are unused; they need not be deployed. Local environment files are preserved, ignored by Git, and excluded from Vercel uploads. Do not paste secrets into chat or commit them.
+The existing private GitHub repository is connected to the existing Vercel project. Commit and push to main to deploy; verify the production URL after the build. Do not create a new repository/service. No private Vapi API key is required. Environment files are ignored by Git and excluded from Vercel uploads. Old authentication/database variables are unused.
 
-## GitHub → Vercel
+## Deterministic fictional data
 
-Authenticate privately in your browser when the CLIs request it:
+Dates are frozen at **October 27, 2026**. This keeps repeated interview tests consistent instead of silently aging the return window. The fixtures return their sandbox reference date. The return policy is **30 days after delivery**, inclusive of the deadline, for unused gear in original condition.
 
-```sh
-gh auth login --hostname github.com --git-protocol https --web
-vercel login
-```
+| Order (string) | Product         | Status     | Key date / detail                                                           | Return eligibility            |
+| -------------- | --------------- | ---------- | --------------------------------------------------------------------------- | ----------------------------- |
+| 123            | Snowboard boots | Delivered  | Purchased Oct 14; delivered Oct 20                                          | Eligible through Nov 19, 2026 |
+| 234            | Hiking backpack | Processing | Purchased Oct 26; payment accepted; estimated Oct 31                        | Not yet shipped               |
+| 345            | Camping tent    | Shipped    | Purchased Oct 21; FedEx mock tracking; estimated Oct 29                     | In transit                    |
+| 456            | Ski jacket      | Delayed    | Purchased Oct 19; UPS mock tracking; estimate revised from Oct 25 to Nov 2  | Not delivered                 |
+| 567            | Snowboard       | Cancelled  | Purchased Oct 22; cancelled Oct 23; USD 429 refund pending, expected Oct 30 | Cancelled                     |
+| 999            | No record       | Not found  | Deliberate missing-record test                                              | Order not found               |
 
-Create a new private repository for this existing directory, commit and push only reviewed source:
+All order IDs and tool arguments are strings. Input `123`, `1 2 3`, `one two three`, and `one hundred twenty three` normalize to `"123"`. Arbitrary surrounding text, ambiguous choices and numeric JSON values are rejected with a request to repeat the three digits separately. The backend never blindly strips digits.
 
-```sh
-git add .
-git commit -m "Simplify SEI Vapi interview sandbox"
-gh repo create sei-voice-ai-lab --private --source=. --remote=origin --push
-```
+For compatibility, the old `orderNumber` argument remains accepted. Only the four historical IDs are exact aliases: SEI-1001→123, SEI-1002→234, SEI-1003→345, SEI-1004→456. They are implementation compatibility cases, not voice examples; results expose only the canonical three-digit string. New native schemas and the prompt use `order_number`. The existing tool's response envelope is unchanged. Its business result now uses the documented snake_case fields below.
 
-Import that private repository in Vercel → Add New → Project, with Next.js defaults. Add the environment variables above through Vercel's private environment settings. Deploy, set APP_BASE_URL to the actual production URL, then redeploy. Connecting the repository may require you to approve Vercel's GitHub access. Do not change repository visibility to work around an authorization issue. `vercel.json` supplies the build/install commands; the webhook has a 30-second maximum duration. No database or extra service is needed.
+Inventory: snowboard boots offer Black sizes 9/10, Gray size 10, with Black 11 unavailable; backpacks have 30 L Green and 45 L Black stock; tents have three units total across two variants; ski jackets have some unavailable sizes/colors; snowboards have limited 152/156 cm stock and no 160 cm stock. General checks aggregate matching variants; requested variants return their actual matching quantity, available variants, and alternatives when unavailable. Unknown products return a tool error; unoffered variants return zero stock with a clarification reason. Optional size/color values are strings. A missing record uses normal mode with order `"999"`; it is separate from injected business failures.
 
-After deployment verify the actual public page and `/api/health`. Ensure Vercel deployment protection does not block the production Function webhook: a Vapi request must reach the public mock endpoint rather than a Vercel login page. Keep preview protection as desired. Never claim a deployment succeeded until its URL responds correctly.
+## Manual Vapi dashboard checklist
 
-## First Function: lookup_order
+1. In Vapi → Tools, edit the existing **lookup_order** Function. Replace its parameters with `order_number` (string) as shown below, and update its description. Keep its existing tool ID and server path. The backend accepts the prior argument during migration, but the new prompt and schema must agree.
+2. Create **check_return_eligibility** and **check_inventory** as Function tools using their exact definitions below. Do not merely save them in the Tools library.
+3. In Assistants, select existing assistant `f1adb106-6546-469a-a808-5df31fb1573f`. Add both new tools alongside lookup_order in its Tools tab. Save/publish as prompted.
+4. Save a copy of the current system prompt, then paste the complete prompt below into Vapi manually. The app does not create tools, attach them, or overwrite prompts through APIs or SDK overrides.
+5. End any existing call and start a new call on the hosted app. Ask “Check order one two three,” “Can I return order one two three?” and “Are snowboard boots size ten in black available?”
+6. Inspect Vapi Calls → Messages for the selected function, arguments and result. Test the failure modes below, restore normal, and repeat.
 
-In [Vapi Dashboard](https://dashboard.vapi.ai):
+Exact complete proposals are also in [vapi-tools.json](vapi-tools.json), generated from the implementation, and the hosted app's **Vapi Setup** tab. These files do not synchronize with Vapi.
 
-1. Tools → Create Tool → **Function**.
-2. Function name: `lookup_order`.
-3. Description: `Look up a fictional SEI order by order number. Ask for the order number first; never guess it.`
-4. Parameters:
+### lookup_order
+
+Function tool. Authentication: **None**. Synchronous, timeout **20 seconds**.
+
+Description: Look up a fictional SEI order using its three-digit order_number string. Ask the caller to say each digit separately if missing or unclear; never guess.
+
+Parameter schema to paste into Vapi:
 
 ```json
 {
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
-    "orderNumber": { "type": "string", "minLength": 1, "maxLength": 100 }
+    "order_number": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Three-digit order number as a string, for example 123. Ask for separate digits if unclear."
+    }
   },
-  "required": ["orderNumber"],
+  "required": ["order_number"],
   "additionalProperties": false
 }
 ```
 
-5. Server URL: `https://sei-voice-ai-lab.vercel.app/api/tools/webhook?mode=normal`. The app's **Tools & Debugger** and **Vapi Setup** tabs generate the full URL and exact JSON configuration. Localhost is not reachable by Vapi.
-6. Leave **Authentication: None**. This read-only fictional webhook is intentionally public, as requested; no token or custom credential is needed.
-7. Keep synchronous execution and a 20-second timeout. Optional request-start message: “Let me check that for you.” Request-failed: “I could not retrieve that information. Please try again.”
-8. Open existing assistant `f1adb106-6546-469a-a808-5df31fb1573f` → Tools → add lookup_order. Confirm lookup_order appears in the assistant’s assigned tools; creating it in the Tools library alone is not enough. Save/publish as prompted.
-9. Make a voice call: “Hi, can you help me check the status of my order?” Supply SEI-1001 when asked. Expected backend result: shipped, estimated delivery 2026-10-29, fictional tracking MOCK-TRACK-1001. Confirm the assistant speaks the actual result.
+Server URL: https://sei-voice-ai-lab.vercel.app/api/tools/webhook?mode=normal
 
-### Give the assistant instructions
+Request-start: “Let me check that for you.” Request-failed: “I could not retrieve that information. Please try again.”
 
-The app calls the saved assistant by ID without prompt overrides. A generic default prompt can produce “I cannot access external systems” instead of a tool lookup. First confirm the tool is attached to this exact assistant, then save a copy of the current system prompt and use this starter in Vapi:
+### check_return_eligibility
 
-```text
-You are Alex, the voice support assistant for SEI, a fictional outdoor retailer. Be friendly and concise. Ask one question at a time.
+Function tool. Authentication: **None**. Synchronous, timeout **20 seconds**.
 
-For order status requests:
-1. If the order number is missing, ask for it. Never invent an order number.
-2. Once you have the order number, call the attached lookup_order tool with the orderNumber argument before answering about status.
-3. For example, "Check order SEI-1001" requires lookup_order with {"orderNumber":"SEI-1001"}. Normalize a clearly spoken SEI order number to that format; ask for clarification if uncertain.
-4. Wait for the actual tool result. Explain the returned status, estimated delivery and tracking information only when provided. Do not read raw JSON aloud.
-5. If the tool returns an error, cannot be called, or provides no usable result, explain that the lookup could not be completed and offer to retry. Never make up an order status or delivery date.
+Description: Check the 30-day return eligibility for a fictional SEI order using its three-digit order_number string. Use this tool for return questions; it does not create a return.
 
-Use lookup_order instead of giving generic instructions to check a company portal. You can access the fictional SEI order data through this tool when it is attached. Do not claim to have checked an order unless you actually called the tool and received its result. Keep spoken answers to one or two short sentences.
+Parameter schema to paste into Vapi:
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "order_number": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Three-digit order number as a string, for example 123. Ask for separate digits if unclear."
+    }
+  },
+  "required": ["order_number"],
+  "additionalProperties": false
+}
 ```
 
-Save/publish the assistant, end any existing call and start a new call. The hosted app’s **Vapi Setup** tab also provides this text with a copy button. This prompt is a manual setup proposal; it is not applied to Vapi automatically.
+Server URL: https://sei-voice-ai-lab.vercel.app/api/tools/webhook?mode=normal
 
-If the agent still refuses, inspect the actual call in Vapi → Messages. No lookup_order invocation points you toward assignment, active assistant version, tool description/schema, model compatibility or prompt instructions. A tool invocation with a failed result points you toward its arguments, Server URL and webhook response. The transcript alone does not distinguish these causes.
+Request-start: “Let me check that for you.” Request-failed: “I could not retrieve that information. Please try again.”
 
-The app never registers or attaches tools automatically. Configure the other tools similarly after the first one works:
+### check_inventory
 
-| Function                 | Required argument | Example phrase                           |
-| ------------------------ | ----------------- | ---------------------------------------- |
-| lookup_order             | orderNumber       | “Track order SEI-1001.”                  |
-| check_return_eligibility | orderNumber       | “Can I return order SEI-1002?”           |
-| check_inventory          | productId         | “Is product P-04 in stock?”              |
-| get_membership_details   | customerId        | “What benefits does customer C-01 have?” |
+Function tool. Authentication: **None**. Synchronous, timeout **20 seconds**.
 
-## Failures and protocol
+Description: Check fictional stock for a product_name, optionally narrowed by size and color. Ask which product is wanted; clarify variants before promising a particular size or color.
 
-Change the native tool's Server URL query to select behavior. No toggles are synchronized, and no state is saved.
+Parameter schema to paste into Vapi:
 
-| Path                              | Real behavior                                   |
-| --------------------------------- | ----------------------------------------------- |
-| /api/tools/webhook?mode=normal    | Normal mock business result                     |
-| /api/tools/webhook?mode=error     | HTTP 200 with a valid correlated `error` string |
-| /api/tools/webhook?mode=slow      | Wait 8 seconds, then return normally            |
-| /api/tools/webhook?mode=malformed | HTTP 200 with an intentionally wrong envelope   |
-| /api/tools/webhook?mode=http500   | Genuine HTTP 500                                |
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "product_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100,
+      "description": "Product name, such as snowboard boots, hiking backpack, camping tent, ski jacket, or snowboard."
+    },
+    "size": {
+      "description": "Requested size, such as 10, M, or 156 cm, if supplied.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    },
+    "color": {
+      "description": "Requested color, if supplied.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 100
+    }
+  },
+  "required": ["product_name"],
+  "additionalProperties": false
+}
+```
 
-All modes are available without authentication and affect only read-only fictional tools. To observe a provider timeout, use slow mode with a Vapi tool timeout of 5 seconds; afterward restore 20 seconds and mode=normal. A URL mode applies to all calls in one webhook request. Separate calls cannot change each other's behavior.
+Server URL: https://sei-voice-ai-lab.vercel.app/api/tools/webhook?mode=normal
 
-The Function endpoint accepts Vapi's `message.type: tool-calls` and `message.toolCallList`. Both object and JSON-string arguments are supported. Every call preserves its exact ID:
+Request-start: “Let me check that for you.” Request-failed: “I could not retrieve that information. Please try again.”
+
+## Complete system prompt to paste into Vapi
+
+```text
+You are Alex, a friendly voice support assistant for SEI, a fictional outdoor retailer. Help with order status, return eligibility, and product availability. Speak naturally in one or two short sentences, ask one question at a time, and do not read JSON aloud.
+
+ORDER NUMBERS
+Ask for the three-digit order number and prefer separate digits: "Please say the three digits one at a time." All order numbers passed to tools must be strings. If clearly spoken, normalize "one two three", "one hundred twenty three", or "1 2 3" to "123". If missing, uncertain, conflicting, or invalid, ask the caller to repeat the three digits separately. Never guess, extract an order number from unrelated numbers, or speak internal legacy aliases.
+
+TOOL ROUTING
+- For order status, collect the order number and call lookup_order with {"order_number":"123"}, substituting the caller's actual number. Wait for the result, then explain the returned status, delivery date/estimate, tracking, or refund details that answer the question.
+- For return questions, collect the order number and call check_return_eligibility with {"order_number":"123"}. Explain eligible, reason, return_deadline when present, and next_step. This tool checks eligibility only; do not claim to have initiated a return or refund.
+- For inventory questions, collect product_name and call check_inventory, for example {"product_name":"Snowboard boots","size":"10","color":"Black"}. Include size and color only if the caller supplies them. If asking generally, the product name alone is sufficient; describe available variants. Before promising stock for a particular variant, ask for any missing size/color needed and check that variant. Use quantity_available and in_stock from the result. Offer only alternatives actually returned by the tool.
+
+ACCURACY AND FAILURES
+Use only tools attached to this assistant. Never invent an order status, date, tracking number, refund, quantity, size, color, or stock claim. Never claim to have accessed a system unless an actual usable tool result was received. Do not substitute memorized sample answers for a fresh tool call.
+If a tool reports order not found, explain that and ask the caller to verify the three digits. If the input is invalid or ambiguous, ask for the three digits separately. For an unknown product or variant, clarify the product/size/color or offer actual returned alternatives.
+If a tool errors, times out, returns malformed data, or provides no usable result, say you could not complete the check and offer to retry. Do not turn a failure into a successful answer. Avoid directing callers to a website when a relevant tool is available. If a required tool is not attached, explain the limitation honestly.
+
+The tools use fictional data frozen around October 27, 2026. Treat returned sandbox dates as fictional test dates and do not invent updates based on the current real-world date.
+```
+
+The app's Vapi Setup tab provides the same prompt with a copy button. It does not apply it automatically. Only tools actually attached to the assistant can be invoked.
+
+## Results and debugging
+
+lookup_order returns `order_number`, `status`, `product`, `order_date`, `shipping_status`, and applicable carrier/tracking/delivery/cancellation/refund fields, plus return eligibility and the fixed reference date. No tracking is invented for orders that have not shipped. check_return_eligibility returns `order_number`, boolean `eligible`, `reason`, applicable `return_deadline`, `next_step` and the reference policy. It does not initiate a return. check_inventory returns `product_name`, requested size/color when supplied, `in_stock`, `quantity_available` and actual available variants/alternatives.
+
+Every Function uses the same public endpoint; the function name in the webhook selects its business logic. All modes remain password-free and affect mock tools only:
+
+| Mode query      | Actual behavior                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------------ |
+| ?mode=normal    | Structured mock result or valid missing-record/input error                                       |
+| ?mode=error     | HTTP 200 with a correlated tool error string                                                     |
+| ?mode=slow      | Wait 8 seconds, then return the normal result; set Vapi timeout to 5 seconds to practice timeout |
+| ?mode=malformed | HTTP 200 with a deliberately invalid response envelope                                           |
+| ?mode=http500   | Real HTTP 500                                                                                    |
+
+Restore the 20-second timeout and normal URL after testing. No state is persisted. One HTTP response carries all results in a batch; transport-level faults affect that whole request.
+
+The adapter accepts Vapi's `message.type: tool-calls` and `message.toolCallList`. Object and JSON-string function arguments are accepted. Results preserve exact IDs and serialize business data as flat strings:
 
 ```json
 {
   "results": [
-    { "toolCallId": "the-incoming-id", "result": "{\"status\":\"shipped\"}" }
+    {
+      "toolCallId": "incoming-id",
+      "result": "{\"order_number\":\"123\",\"status\":\"delivered\"}"
+    }
   ]
 }
 ```
 
-Business/input failures return HTTP 200 with `error` instead of `result`. Invalid webhook JSON/envelopes return HTTP 400. Batched requests get one correlated result/error per input call. Intentional malformed and HTTP-failure modes deliberately break the usual contract. The debugger displays the actual request, HTTP status, elapsed time and body from the shared adapter. Server logs contain only basic IDs, mode, status and duration; no separate logging database exists.
+On business/input failures, return HTTP 200 with `error` instead of `result` for that ID. Invalid webhook JSON/envelopes return HTTP 400. Every valid incoming tool call receives its own result or error. There is no hidden model reasoning or fabricated provider telemetry.
 
-## Where to troubleshoot
+In Vapi → Calls → your call, **Messages** shows actual tool arguments/results; **Logs → Webhooks** shows HTTP requests/responses/errors; **Transcript** shows spoken behavior; **Latency Summary** shows provider pipeline timing. The lab's debugger shows real direct backend requests/responses and elapsed time, not a simulated provider call.
 
-Vapi Dashboard → **Calls** under Logs → select your call:
-
-- **Messages**: actual tool selection, arguments and results.
-- **Logs → Webhooks**: HTTP URL, authentication outcome, response status/body and timeout evidence.
-- **Transcript**: what the caller and assistant actually said.
-- **Latency Summary**: provider pipeline timing; compare it with the backend's own elapsed duration.
-
-Exercises: omit the order number and check for clarification; request SEI-9999 and inspect a business error; compare error vs http500 vs malformed; use slow to reproduce a timeout; restore normal and repeat the same phrase. Do not blame the prompt for a malformed response envelope. Do not infer the cause of latency without checking each relevant boundary.
-
-Current official references: [Function protocol](https://docs.vapi.ai/tools/custom-tools), [call logs](https://docs.vapi.ai/observability/logs/call-logs).
-
-## Checks
+## Verification
 
 ```sh
 pnpm test
@@ -149,6 +218,10 @@ pnpm typecheck
 pnpm build
 # With the dev server running:
 pnpm test:http
+# Test the actual production endpoint after deployment:
+TEST_BASE_URL=https://sei-voice-ai-lab.vercel.app pnpm test:http
 ```
 
-HTTP smoke tests never initiate a paid Vapi call. Genuine audio, tool invocation and spoken use of the result require a manual browser call after the native tool is attached. The public site and public no-auth webhook modes were verified on Vercel on 2026-10-27. Nine tests, lint, type checks, production build and GitHub CI passed. A genuine hosted voice/tool conversation remains to be verified after you manually attach lookup_order in Vapi.
+Tests cover normalization and rejected ambiguities, compatibility, five consistent order states, return rules, inventory variants, missing records, input validation, exact batched toolCallId correlation, and failure modes. HTTP smoke tests never initiate paid calls. Genuine voice use of the two new native tools requires the manual Vapi checklist above. The existing order voice flow was confirmed by the user before this expansion; new spoken results are not assumed from backend tests.
+
+Official references checked October 27, 2026: [Function tools and protocol](https://docs.vapi.ai/tools/custom-tools), [prompting guide](https://docs.vapi.ai/prompting-guide), [native call logs](https://docs.vapi.ai/observability/logs/call-logs).

@@ -1,0 +1,119 @@
+[
+  {
+    "type": "function",
+    "function": {
+      "name": "lookup_order",
+      "description": "Look up a fictional SEI order using its three-digit order_number string. Ask the caller to say each digit separately if missing or unclear; never guess.",
+      "parameters": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "order_number": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Three-digit order number as a string, for example 123. Ask for separate digits if unclear."
+          }
+        },
+        "required": ["order_number"],
+        "additionalProperties": false
+      }
+    },
+    "server": {
+      "url": "https://sei-voice-ai-lab.vercel.app/api/tools/webhook?mode=normal",
+      "timeoutSeconds": 20
+    },
+    "messages": [
+      {
+        "type": "request-start",
+        "content": "Let me check that for you."
+      },
+      {
+        "type": "request-failed",
+        "content": "I could not retrieve that information. Please try again."
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "check_return_eligibility",
+      "description": "Check the 30-day return eligibility for a fictional SEI order using its three-digit order_number string. Use this tool for return questions; it does not create a return.",
+      "parameters": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "order_number": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Three-digit order number as a string, for example 123. Ask for separate digits if unclear."
+          }
+        },
+        "required": ["order_number"],
+        "additionalProperties": false
+      }
+    },
+    "server": {
+      "url": "https://sei-voice-ai-lab.vercel.app/api/tools/webhook?mode=normal",
+      "timeoutSeconds": 20
+    },
+    "messages": [
+      {
+        "type": "request-start",
+        "content": "Let me check that for you."
+      },
+      {
+        "type": "request-failed",
+        "content": "I could not retrieve that information. Please try again."
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "check_inventory",
+      "description": "Check fictional stock for a product_name, optionally narrowed by size and color. Ask which product is wanted; clarify variants before promising a particular size or color.",
+      "parameters": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "product_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100,
+            "description": "Product name, such as snowboard boots, hiking backpack, camping tent, ski jacket, or snowboard."
+          },
+          "size": {
+            "description": "Requested size, such as 10, M, or 156 cm, if supplied.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "color": {
+            "description": "Requested color, if supplied.",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": ["product_name"],
+        "additionalProperties": false
+      }
+    },
+    "server": {
+      "url": "https://sei-voice-ai-lab.vercel.app/api/tools/webhook?mode=normal",
+      "timeoutSeconds": 20
+    },
+    "messages": [
+      {
+        "type": "request-start",
+        "content": "Let me check that for you."
+      },
+      {
+        "type": "request-failed",
+        "content": "I could not retrieve that information. Please try again."
+      }
+    ]
+  }
+]

@@ -1,77 +1,142 @@
+import { z } from "zod";
 import { tools, type ToolName } from "./catalog";
+import { orderNumberFromArguments } from "./order-number";
+export const sandboxDate = "2026-10-27";
+export const returnPolicy = {
+  window_days: 30,
+  condition: "Unused gear in original condition",
+  as_of: sandboxDate,
+};
+type Order = {
+  order_number: string;
+  status: "delivered" | "processing" | "shipped" | "delayed" | "cancelled";
+  product: string;
+  order_date: string;
+  shipping_status: string;
+  shipping_carrier?: string;
+  tracking_number?: string;
+  estimated_delivery?: string;
+  original_estimated_delivery?: string;
+  delivered_date?: string;
+  payment_status: string;
+  cancelled_date?: string;
+  cancellation_reason?: string;
+  refund_status?: string;
+  refund_amount?: number;
+  refund_currency?: string;
+  refund_expected_date?: string;
+};
+export const orders: Order[] = [
+  {
+    order_number: "123",
+    status: "delivered",
+    product: "Snowboard boots",
+    order_date: "2026-10-14",
+    payment_status: "paid",
+    shipping_status: "Delivered successfully",
+    shipping_carrier: "UPS (fictional)",
+    tracking_number: "MOCK-123-UPS",
+    delivered_date: "2026-10-20",
+  },
+  {
+    order_number: "234",
+    status: "processing",
+    product: "Hiking backpack",
+    order_date: "2026-10-26",
+    payment_status: "accepted",
+    shipping_status: "Payment accepted; preparing shipment",
+    estimated_delivery: "2026-10-31",
+  },
+  {
+    order_number: "345",
+    status: "shipped",
+    product: "Camping tent",
+    order_date: "2026-10-21",
+    payment_status: "paid",
+    shipping_status: "In transit",
+    shipping_carrier: "FedEx (fictional)",
+    tracking_number: "MOCK-345-FDX",
+    estimated_delivery: "2026-10-29",
+  },
+  {
+    order_number: "456",
+    status: "delayed",
+    product: "Ski jacket",
+    order_date: "2026-10-19",
+    payment_status: "paid",
+    shipping_status: "Carrier delay; revised delivery estimate",
+    shipping_carrier: "UPS (fictional)",
+    tracking_number: "MOCK-456-UPS",
+    original_estimated_delivery: "2026-10-25",
+    estimated_delivery: "2026-11-02",
+  },
+  {
+    order_number: "567",
+    status: "cancelled",
+    product: "Snowboard",
+    order_date: "2026-10-22",
+    payment_status: "refund_pending",
+    shipping_status: "Cancelled before shipment",
+    cancelled_date: "2026-10-23",
+    cancellation_reason: "Customer requested cancellation",
+    refund_status: "pending",
+    refund_amount: 429,
+    refund_currency: "USD",
+    refund_expected_date: "2026-10-30",
+  },
+];
 export const products = [
-  [
-    "P-01",
-    "Summit All-Mountain Snowboard",
-    "snowboard",
-    429,
-    12,
-    "156 cm directional twin; medium flex. Have binding torque checked by a qualified technician.",
-  ],
-  [
-    "P-02",
-    "Ridge Touring Skis",
-    "skis",
-    649,
-    4,
-    "172 cm; 96 mm waist. Professional binding setup required.",
-  ],
-  [
-    "P-03",
-    "Trailhead 45 Backpack",
-    "hiking backpack",
-    189,
-    21,
-    "45 L; adjustable torso 17–21 inches; 1.4 kg.",
-  ],
-  [
-    "P-04",
-    "Basecamp 2 Tent",
-    "camping tent",
-    259,
-    0,
-    "Two person; three season; 2.1 kg; seam-sealed fly.",
-  ],
-  [
-    "P-05",
-    "Pinecrest Hiking Boots",
-    "footwear",
-    159,
-    9,
-    "Waterproof mid boot; try with hiking socks; allow toe room.",
-  ],
-  [
-    "P-06",
-    "Stormline Rain Shell",
-    "outdoor clothing",
-    139,
-    18,
-    "Three-layer waterproof shell; wash cold; no fabric softener.",
-  ],
-  [
-    "P-07",
-    "Frostline Sleeping Bag",
-    "camping",
-    199,
-    7,
-    "20°F ISO comfort rating; synthetic insulation.",
-  ],
-  [
-    "P-08",
-    "Switchback Snowboard Bindings",
-    "snowboard",
-    219,
-    6,
-    "Medium size US 8–11; verify board mounting compatibility.",
-  ],
-].map(([id, name, category, price, stock, specs]) => ({
-  id: String(id),
-  name: String(name),
-  category: String(category),
-  price: Number(price),
-  stock: Number(stock),
-  specs: String(specs),
-}));
+  {
+    id: "P-01",
+    product_name: "Snowboard boots",
+    aliases: ["boots", "summit snowboard boots"],
+    variants: [
+      { size: "9", color: "Black", quantity: 4 },
+      { size: "10", color: "Black", quantity: 6 },
+      { size: "11", color: "Black", quantity: 0 },
+      { size: "10", color: "Gray", quantity: 2 },
+    ],
+  },
+  {
+    id: "P-03",
+    product_name: "Hiking backpack",
+    aliases: ["backpack", "trailhead backpack"],
+    variants: [
+      { size: "30 L", color: "Green", quantity: 12 },
+      { size: "45 L", color: "Black", quantity: 8 },
+    ],
+  },
+  {
+    id: "P-04",
+    product_name: "Camping tent",
+    aliases: ["tent", "basecamp tent"],
+    variants: [
+      { size: "2-person", color: "Orange", quantity: 2 },
+      { size: "4-person", color: "Green", quantity: 1 },
+    ],
+  },
+  {
+    id: "P-06",
+    product_name: "Ski jacket",
+    aliases: ["jacket", "stormline jacket"],
+    variants: [
+      { size: "S", color: "Blue", quantity: 3 },
+      { size: "M", color: "Blue", quantity: 0 },
+      { size: "L", color: "Black", quantity: 0 },
+      { size: "L", color: "Blue", quantity: 2 },
+    ],
+  },
+  {
+    id: "P-08",
+    product_name: "Snowboard",
+    aliases: ["summit snowboard"],
+    variants: [
+      { size: "152 cm", color: "Black", quantity: 2 },
+      { size: "156 cm", color: "Black", quantity: 1 },
+      { size: "160 cm", color: "Black", quantity: 0 },
+    ],
+  },
+];
 export const customers = [
   {
     id: "C-01",
@@ -87,108 +152,142 @@ export const customers = [
   },
   { id: "C-03", name: "Sam Chen", email: "sam@example.invalid", tier: "Guest" },
 ];
-export const orders = [
-  {
-    orderNumber: "SEI-1001",
-    customerId: "C-01",
-    productId: "P-01",
-    status: "shipped",
-    orderedAt: "2026-10-20",
-    deliveredAt: null,
-    estimatedDelivery: "2026-10-29",
-    tracking: "MOCK-TRACK-1001",
-  },
-  {
-    orderNumber: "SEI-1002",
-    customerId: "C-02",
-    productId: "P-05",
-    status: "delivered",
-    orderedAt: "2026-10-10",
-    deliveredAt: "2026-10-15",
-    estimatedDelivery: null,
-    tracking: "MOCK-TRACK-1002",
-  },
-  {
-    orderNumber: "SEI-1003",
-    customerId: "C-03",
-    productId: "P-04",
-    status: "delivered",
-    orderedAt: "2025-01-01",
-    deliveredAt: "2025-01-05",
-    estimatedDelivery: null,
-    tracking: "MOCK-TRACK-1003",
-  },
-  {
-    orderNumber: "SEI-1004",
-    customerId: "C-01",
-    productId: "P-03",
-    status: "processing",
-    orderedAt: "2026-10-26",
-    deliveredAt: null,
-    estimatedDelivery: "2026-11-01",
-    tracking: null,
-  },
-];
 export class BusinessError extends Error {}
-export function executeBusiness(
-  name: ToolName,
-  raw: unknown,
-  now = new Date(),
-) {
-  const args = tools[name].schema.parse(raw) as Record<string, string>;
-  const order = () => {
-    const o = orders.find((o) => o.orderNumber === args.orderNumber);
-    if (!o)
-      throw new BusinessError(
-        "Order not found. Ask the customer to verify the order number.",
-      );
-    return o;
+function findOrder(raw: unknown) {
+  const number = orderNumberFromArguments(raw);
+  const order = orders.find((o) => o.order_number === number);
+  if (!order)
+    throw new BusinessError(
+      `Order ${number} was not found. Ask the caller to verify the three digits separately.`,
+    );
+  return order;
+}
+function eligibility(order: Order) {
+  const base = {
+    order_number: order.order_number,
+    eligible: false,
+    reason: "",
+    next_step: "",
+    policy: returnPolicy,
   };
-  const eligibility = () => {
-    const o = order();
-    const days = o.deliveredAt
-      ? Math.floor((now.getTime() - Date.parse(o.deliveredAt)) / 86400000)
-      : null;
+  if (order.status === "cancelled")
     return {
-      orderNumber: o.orderNumber,
-      eligible: days !== null && days >= 0 && days <= 90,
-      daysSinceDelivery: days,
-      policy: "Returns within 90 days of delivery; unused gear only.",
-      reason:
-        days === null
-          ? "Not delivered"
-          : days > 90
-            ? "Outside 90-day window"
-            : "Within return window",
+      ...base,
+      reason: "This order was cancelled and cannot be returned.",
+      next_step: `No return is needed. The refund is ${order.refund_status}; expected ${order.refund_expected_date}.`,
     };
+  if (!order.delivered_date)
+    return {
+      ...base,
+      reason:
+        order.status === "processing"
+          ? "The order has not shipped yet."
+          : order.status === "shipped"
+            ? "The order is still in transit."
+            : "The order is delayed and has not been delivered.",
+      next_step: "Wait until delivery, then check return eligibility again.",
+    };
+  const deadline = new Date(
+    Date.parse(order.delivered_date + "T00:00:00Z") +
+      returnPolicy.window_days * 86400000,
+  )
+    .toISOString()
+    .slice(0, 10);
+  const eligible =
+    sandboxDate >= order.delivered_date && sandboxDate <= deadline;
+  return {
+    ...base,
+    eligible,
+    return_deadline: deadline,
+    reason: eligible
+      ? "Within the 30-day return window; gear must be unused and in original condition."
+      : "Outside the 30-day return window.",
+    next_step: eligible
+      ? "Keep the item unused and request a return before the deadline. This tool only checks eligibility."
+      : "Contact SEI support to discuss options.",
   };
-  switch (name) {
-    case "lookup_order":
-      return order();
-    case "check_return_eligibility":
-      return eligibility();
-    case "check_inventory": {
-      const product = products.find((p) => p.id === args.productId);
-      if (!product) throw new BusinessError("Product not found");
-      return {
-        productId: product.id,
-        name: product.name,
-        available: product.stock > 0,
-        quantity: product.stock,
-      };
-    }
-    case "get_membership_details": {
-      const c = customers.find((c) => c.id === args.customerId);
-      if (!c) throw new BusinessError("Customer not found");
-      return {
-        ...c,
-        benefits:
-          c.tier === "Summit"
-            ? ["Free standard shipping", "Gear clinics"]
-            : c.tier === "Trail"
-              ? ["Gear clinics"]
-              : [],
-      };
-    }
+}
+const token = (s: string) => s.trim().toLowerCase().replace(/\s+/g, " ");
+const sizeToken = (s: string) =>
+  token(s)
+    .replace(/^us\s*/, "")
+    .replace(/\s*cm$/, "")
+    .replace(/\s+/g, "");
+function inventory(raw: unknown) {
+  // Keep old productId callers working, but advertise name/size/color in Vapi.
+  const args = z
+    .object({
+      product_name: z.string().trim().min(1).max(100).optional(),
+      productId: z.string().optional(),
+      size: z.string().trim().min(1).max(30).optional(),
+      color: z.string().trim().min(1).max(30).optional(),
+    })
+    .parse(raw);
+  if (!args.product_name && !args.productId)
+    throw new BusinessError(
+      "Missing product_name. Ask which product the caller wants before checking stock.",
+    );
+  const product = args.product_name
+    ? products.find((p) =>
+        [p.product_name, ...p.aliases].some(
+          (n) => token(n) === token(args.product_name!),
+        ),
+      )
+    : products.find((p) => p.id === args.productId);
+  if (!product)
+    throw new BusinessError(
+      "Product not found. Ask for snowboard boots, hiking backpack, camping tent, ski jacket, or snowboard.",
+    );
+  const matching = product.variants.filter(
+    (v) =>
+      (!args.size || sizeToken(v.size) === sizeToken(args.size)) &&
+      (!args.color || token(v.color) === token(args.color)),
+  );
+  const quantity = matching.reduce((n, v) => n + v.quantity, 0);
+  return {
+    product_name: product.product_name,
+    ...(args.size ? { requested_size: args.size } : {}),
+    ...(args.color ? { requested_color: args.color } : {}),
+    in_stock: quantity > 0,
+    quantity_available: quantity,
+    reason: !matching.length
+      ? "That size/color combination is not offered."
+      : quantity === 0
+        ? "The requested variant is out of stock."
+        : quantity <= 3
+          ? "Low stock."
+          : "In stock.",
+    available_variants: product.variants.filter((v) => v.quantity > 0),
+    ...(!quantity
+      ? { alternatives: product.variants.filter((v) => v.quantity > 0) }
+      : {}),
+  };
+}
+export function executeBusiness(name: ToolName, raw: unknown) {
+  if (name === "lookup_order") {
+    const order = findOrder(raw),
+      returns = eligibility(order);
+    return {
+      ...order,
+      return_eligible: returns.eligible,
+      ...("return_deadline" in returns
+        ? { return_deadline: returns.return_deadline }
+        : {}),
+      as_of: sandboxDate,
+    };
   }
+  if (name === "check_return_eligibility") return eligibility(findOrder(raw));
+  if (name === "check_inventory") return inventory(raw);
+  const args = tools.get_membership_details.schema.parse(raw);
+  const c = customers.find((c) => c.id === args.customerId);
+  if (!c) throw new BusinessError("Customer not found");
+  return {
+    ...c,
+    benefits:
+      c.tier === "Summit"
+        ? ["Free standard shipping", "Gear clinics"]
+        : c.tier === "Trail"
+          ? ["Gear clinics"]
+          : [],
+  };
 }
