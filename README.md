@@ -1,0 +1,134 @@
+# SEI Voice AI Lab
+
+A small Vapi interview sandbox: the existing voice playground, four hardcoded mock functions, a request/response tester, and URL-based failures. No database, saved sessions, management API, or tool synchronization. Use Vapi's dashboard for assistant settings, tool creation and call logs. The original SEI application is untouched.
+
+## Local use
+
+Requires Node 22+ and pnpm 11+.
+
+```sh
+pnpm install --frozen-lockfile
+test -f .env.local || cp .env.example .env.local
+pnpm dev
+```
+
+On this machine `./scripts/dev-local.sh` also finds the bundled Node runtime. Open http://localhost:3000. Use ADMIN_PASSWORD from the ignored `.env.local` file. Existing public key, assistant ID and voice SDK integration are preserved. The shared password is kept only in page memory and sent through HTTP Basic authentication to the lab API. Reloading locks the page. Use HTTPS when hosted.
+
+| Variable                      | Purpose                                                               |
+| ----------------------------- | --------------------------------------------------------------------- |
+| NEXT_PUBLIC_VAPI_PUBLIC_KEY   | Existing Vapi public Web SDK key                                      |
+| NEXT_PUBLIC_VAPI_ASSISTANT_ID | Existing assistant ID                                                 |
+| ADMIN_PASSWORD                | One private lab password; protects SDK settings and debugger          |
+| VAPI_WEBHOOK_SECRET           | Separate long random token for native Function webhook authentication |
+| APP_BASE_URL                  | Actual production origin; localhost for development                   |
+| VAPI_CREDENTIAL_ID            | Optional saved Vapi Bearer credential ID for generated tool JSON      |
+
+No private Vapi API key is required. Old DATABASE_URL, SESSION_SECRET and VAPI_PRIVATE_API_KEY variables are unused; they need not be deployed. Local environment files are preserved, ignored by Git, and excluded from Vercel uploads. Do not paste secrets into chat or commit them.
+
+## GitHub → Vercel
+
+Authenticate privately in your browser when the CLIs request it:
+
+```sh
+gh auth login --hostname github.com --git-protocol https --web
+vercel login
+```
+
+Create a new private repository for this existing directory, commit and push only reviewed source:
+
+```sh
+git add .
+git commit -m "Simplify SEI Vapi interview sandbox"
+gh repo create sei-voice-ai-lab --private --source=. --remote=origin --push
+```
+
+Import that private repository in Vercel → Add New → Project, with Next.js defaults. Add the environment variables above through Vercel's private environment settings. Deploy, set APP_BASE_URL to the actual production URL, then redeploy. Connecting the repository may require you to approve Vercel's GitHub access. Do not change repository visibility to work around an authorization issue. `vercel.json` supplies the build/install commands; the webhook has a 30-second maximum duration. No database or extra service is needed.
+
+After deployment verify the actual public page and `/api/health`. Ensure Vercel deployment protection does not block the production Function webhook: a Vapi request must reach the app's Bearer check rather than a Vercel login page. Keep preview protection as desired. Never claim a deployment succeeded until its URL responds correctly.
+
+## First Function: lookup_order
+
+In [Vapi Dashboard](https://dashboard.vapi.ai):
+
+1. Tools → Create Tool → **Function**.
+2. Function name: `lookup_order`.
+3. Description: `Look up a fictional SEI order by order number. Ask for the order number first; never guess it.`
+4. Parameters:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "orderNumber": { "type": "string", "minLength": 1, "maxLength": 100 }
+  },
+  "required": ["orderNumber"],
+  "additionalProperties": false
+}
+```
+
+5. Server URL: your actual production origin plus `/api/tools/webhook?mode=normal`. The app's **Tools & Debugger** and **Vapi Setup** tabs generate the full URL and exact JSON configuration. A public production origin is not yet recorded here; localhost is not reachable by Vapi.
+6. Create a Vapi **Bearer Token Custom Credential**. Header: `Authorization`, prefix: `Bearer`, token: the same private value as VAPI_WEBHOOK_SECRET on Vercel. Select this credential on the saved tool. Do not put the token in the URL or prompt.
+7. Keep synchronous execution and a 20-second timeout. Optional request-start message: “Let me check that for you.” Request-failed: “I could not retrieve that information. Please try again.”
+8. Open existing assistant `f1adb106-6546-469a-a808-5df31fb1573f` → Tools → add lookup_order. Preserve existing prompt, model, voice and other settings. Save/publish as prompted.
+9. Make a voice call: “Hi, can you help me check the status of my order?” Supply SEI-1001 when asked. Expected backend result: shipped, estimated delivery 2026-10-29, fictional tracking MOCK-TRACK-1001. Confirm the assistant speaks the actual result.
+
+The app never registers or attaches tools automatically. Configure the other tools similarly after the first one works:
+
+| Function                 | Required argument | Example phrase                           |
+| ------------------------ | ----------------- | ---------------------------------------- |
+| lookup_order             | orderNumber       | “Track order SEI-1001.”                  |
+| check_return_eligibility | orderNumber       | “Can I return order SEI-1002?”           |
+| check_inventory          | productId         | “Is product P-04 in stock?”              |
+| get_membership_details   | customerId        | “What benefits does customer C-01 have?” |
+
+## Failures and protocol
+
+Change the native tool's Server URL query to select behavior. No toggles are synchronized, and no state is saved.
+
+| Path                              | Real behavior                                   |
+| --------------------------------- | ----------------------------------------------- |
+| /api/tools/webhook?mode=normal    | Normal mock business result                     |
+| /api/tools/webhook?mode=error     | HTTP 200 with a valid correlated `error` string |
+| /api/tools/webhook?mode=slow      | Wait 8 seconds, then return normally            |
+| /api/tools/webhook?mode=malformed | HTTP 200 with an intentionally wrong envelope   |
+| /api/tools/webhook?mode=http500   | Genuine HTTP 500                                |
+
+All modes require the saved Bearer credential. Only fictional tools are affected. To observe a provider timeout, use slow mode with a Vapi tool timeout of 5 seconds; afterward restore 20 seconds and mode=normal. A URL mode applies to all calls in one webhook request. Separate calls cannot change each other's behavior.
+
+The Function endpoint accepts Vapi's `message.type: tool-calls` and `message.toolCallList`. Both object and JSON-string arguments are supported. Every call preserves its exact ID:
+
+```json
+{
+  "results": [
+    { "toolCallId": "the-incoming-id", "result": "{\"status\":\"shipped\"}" }
+  ]
+}
+```
+
+Business/input failures return HTTP 200 with `error` instead of `result`. Invalid webhook JSON/envelopes return HTTP 400. Batched requests get one correlated result/error per input call. Intentional malformed and HTTP-failure modes deliberately break the usual contract. The debugger displays the actual request, HTTP status, elapsed time and body from the shared adapter. Server logs contain only basic IDs, mode, status and duration; no separate logging database exists.
+
+## Where to troubleshoot
+
+Vapi Dashboard → **Calls** under Logs → select your call:
+
+- **Messages**: actual tool selection, arguments and results.
+- **Logs → Webhooks**: HTTP URL, authentication outcome, response status/body and timeout evidence.
+- **Transcript**: what the caller and assistant actually said.
+- **Latency Summary**: provider pipeline timing; compare it with the backend's own elapsed duration.
+
+Exercises: omit the order number and check for clarification; request SEI-9999 and inspect a business error; compare error vs http500 vs malformed; use slow to reproduce a timeout; restore normal and repeat the same phrase. Do not blame the prompt for a malformed response envelope. Do not infer the cause of latency without checking each relevant boundary.
+
+Current official references: [Function protocol](https://docs.vapi.ai/tools/custom-tools), [Bearer credentials](https://docs.vapi.ai/server-url/server-authentication), [call logs](https://docs.vapi.ai/observability/logs/call-logs).
+
+## Checks
+
+```sh
+pnpm test
+pnpm lint
+pnpm typecheck
+pnpm build
+# With the dev server running:
+pnpm test:http
+```
+
+HTTP smoke tests never initiate a paid Vapi call. Genuine audio, tool invocation and spoken use of the result require a manual browser call after the native tool is attached. Hosting and live end-to-end results must be verified separately.

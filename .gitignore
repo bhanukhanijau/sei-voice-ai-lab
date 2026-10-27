@@ -1,0 +1,14 @@
+node_modules
+.next
+.env*
+!.env.example
+.data
+backups
+coverage
+*.tsbuildinfo
+
+.pnpm-store
+*.private.json
+
+.vercel
+*.log

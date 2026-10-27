@@ -1,0 +1,9 @@
+.git
+.next
+node_modules
+.env*
+.data
+backups
+.pnpm-store
+*.private.json
+*.log
