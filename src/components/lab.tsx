@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { Button } from "./ui/button";
 import type { Mode } from "@/lib/catalog";
+import { orderAssistantPrompt } from "@/lib/assistant-prompt";
 type Tool = {
   name: string;
   description: string;
@@ -48,6 +49,43 @@ function Json({ value }: { value: unknown }) {
     </div>
   );
 }
+function PromptInstructions() {
+  const [copied, setCopied] = useState(false);
+  return (
+    <section className="panel">
+      <h2>Give the assistant order-lookup instructions</h2>
+      <p>
+        In Vapi, open your SEI assistant and check that lookup_order is selected
+        in its Tools tab. A tool saved in the library must also be attached to
+        the assistant.
+      </p>
+      <p>
+        Save a copy of the current system prompt, then use this starter prompt
+        in the Vapi system prompt field. Save/publish, end any existing call,
+        and start a new call.
+      </p>
+      <label>
+        SEI starter system prompt
+        <textarea rows={14} readOnly value={orderAssistantPrompt} />
+      </label>
+      <Button
+        onClick={async () => {
+          await navigator.clipboard.writeText(orderAssistantPrompt);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        }}
+      >
+        {copied ? "Copied" : "Copy system prompt"}
+      </Button>
+      <p>
+        Try “Check order SEI-1001.” In Vapi Calls → Messages, verify a
+        lookup_order invocation with orderNumber SEI-1001 appears before the
+        spoken answer. A prompt cannot enable a tool that is not attached.
+      </p>
+    </section>
+  );
+}
+
 export default function Lab() {
   const [boot, setBoot] = useState<Config | null>(null),
     [password, setPassword] = useState(""),
@@ -520,6 +558,7 @@ export default function Lab() {
           )}
           {page === "Vapi Setup" && (
             <>
+              <PromptInstructions />
               <section className="panel">
                 <h2>Create lookup_order manually</h2>
                 <ol>
