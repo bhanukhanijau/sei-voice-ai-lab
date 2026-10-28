@@ -362,10 +362,12 @@ test("Product Guides render the actual order-123 scenario and copyable questions
   );
   assert.match(html, /Product Guides/);
   assert.match(html, /order 123 \(Snowboard boots · delivered\)/);
-  assert.match(html, /How should they fit/);
-  assert.match(html, /What are snowboard bindings/);
+  assert.match(html, /How should my snowboard boots fit/);
+  assert.match(html, /How do I set up my snowboard/);
   assert.match(html, /first ride/);
-  assert.match(html, /Requires the article uploaded/);
+  assert.match(html, /Knowledge Search \(RAG\)/);
+  assert.match(html, /search_sei_guides/);
+  assert.ok(html.indexOf("Sample Orders") < html.indexOf("Things to Try"));
   assert.match(
     html,
     /href="https:\/\/github.com\/bhanukhanijau\/sei-voice-ai-lab\/blob\/main\/docs\/snowboardGuide.md" target="_blank" rel="noopener noreferrer"/,

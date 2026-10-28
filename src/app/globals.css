@@ -2278,7 +2278,7 @@ footer {
   min-height: 82px;
 }
 .playground-workspace {
-  grid-template-columns: minmax(0, 0.27fr) minmax(0, 0.32fr) minmax(0, 0.41fr);
+  grid-template-columns: minmax(0, 0.35fr) minmax(0, 0.32fr) minmax(0, 0.33fr);
   gap: 12px;
   flex: 1;
   min-height: 0;
@@ -2971,4 +2971,72 @@ footer {
   font-size: 11px;
   color: var(--accent);
   text-underline-offset: 3px;
+}
+
+.sidebar-source-group + .sidebar-source-group {
+  border-top: 1px solid var(--line);
+  margin-top: 14px;
+  padding-top: 14px;
+}
+.sidebar-source-group h2 {
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.6;
+  letter-spacing: 0.6px;
+}
+.guide-quick-start > p {
+  margin-bottom: 0;
+}
+.guide-orders .order-record > strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+.guide-question-group {
+  margin-top: 12px;
+}
+.guide-question-group h4 {
+  margin: 0 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.knowledge-example,
+.product-guides {
+  padding: 10px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+}
+.knowledge-example h4 {
+  color: var(--accent);
+}
+.guide-section.product-guides {
+  padding-top: 13px;
+}
+@media (max-width: 780px) {
+  .sidebar-source {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .sidebar-source-links {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sidebar-source-group + .sidebar-source-group {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+}
+.playground-workspace .execution-title {
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+.playground-workspace .execution-title strong,
+.playground-workspace .argument-summary code {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.playground-workspace .argument-summary code {
+  white-space: pre-wrap;
 }

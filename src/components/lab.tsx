@@ -330,49 +330,66 @@ export default function Lab({
             );
           })}
         </nav>
-        <section className="sidebar-source" aria-labelledby="source-heading">
-          <h2 id="source-heading">Under the Hood</h2>
-          <div className="sidebar-source-links">
-            {[
-              {
-                label: "View Source Code",
-                path: "",
-                title: "Full application repository.",
-                icon: Code2,
-              },
-              {
-                label: "Tool Definitions",
-                path: "/blob/main/src/lib/catalog.ts",
-                title: "Function names, descriptions, schemas, and examples.",
-                icon: FileCode2,
-              },
-              {
-                label: "Knowledge Article",
-                path: "/blob/main/docs/snowboardGuide.md",
-                title:
-                  "SEI Outdoors: Snowboard Setup, Boot Fit & First Ride Guide. Source document for manual upload to Vapi.",
-                icon: BookOpen,
-              },
-              {
-                label: "Mock Data & Business Logic",
-                path: "/blob/main/src/lib/business.ts",
-                title:
-                  "Fictional orders, inventory, returns, and customer information.",
-                icon: Database,
-              },
-            ].map(({ label, path, title, icon: Icon }) => (
-              <a
-                key={label}
-                href={`https://github.com/bhanukhanijau/sei-voice-ai-lab${path}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                title={title}
-              >
-                <Icon size={14} aria-hidden="true" />
-                <span>{label}</span>
-              </a>
-            ))}
-          </div>
+        <section
+          className="sidebar-source"
+          aria-label="Source code and demo references"
+        >
+          {[
+            {
+              heading: "SOURCE CODE",
+              links: [
+                {
+                  label: "View Source Code",
+                  path: "",
+                  title: "Full application repository.",
+                  icon: Code2,
+                },
+                {
+                  label: "Tool Definitions",
+                  path: "/blob/main/src/lib/catalog.ts",
+                  title: "Function names, descriptions, schemas, and examples.",
+                  icon: FileCode2,
+                },
+              ],
+            },
+            {
+              heading: "DEMO DATA & KNOWLEDGE",
+              links: [
+                {
+                  label: "Mock Data & Business Logic",
+                  path: "/blob/main/src/lib/business.ts",
+                  title:
+                    "Fictional orders, inventory, returns, and customer information.",
+                  icon: Database,
+                },
+                {
+                  label: "Knowledge Article",
+                  path: "/blob/main/docs/snowboardGuide.md",
+                  title:
+                    "SEI Outdoors: Snowboard Setup, Boot Fit & First Ride Guide. Source document for manual upload to Vapi.",
+                  icon: BookOpen,
+                },
+              ],
+            },
+          ].map(({ heading, links }) => (
+            <div className="sidebar-source-group" key={heading}>
+              <h2>{heading}</h2>
+              <div className="sidebar-source-links">
+                {links.map(({ label, path, title, icon: Icon }) => (
+                  <a
+                    key={label}
+                    href={`https://github.com/bhanukhanijau/sei-voice-ai-lab${path}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    title={title}
+                  >
+                    <Icon size={14} aria-hidden="true" />
+                    <span>{label}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
+          ))}
         </section>
         <div className="sidebar-bottom">
           <div className="sidebar-utilities">
