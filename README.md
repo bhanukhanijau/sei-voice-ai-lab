@@ -267,3 +267,30 @@ Model output is never displayed as speech. The old fallback (`transcript || capt
 Representative fixtures grounded in the installed SDK types cover generated-before-speech, incremental/repeated partials, final reconciliation, overlapping fragments, interruptions and rapid following turns, tool success/error sequences, and valid order 567. Browser fixtures are synthetic, not live voice evidence. A real browser call was attempted locally but remained Connecting without any SDK call-start/transcript events, so audio behavior could not be verified. Remaining manual check: start a new call, ask “Can you tell me about order 567?”, interrupt the assistant midway with an inventory question, and inspect the bubbles, interruption marker and actual tool events; confirm provider cadence locally and on the production demo. No word-level audio synchronization is claimed.
 
 For the optional order-number prompt correction, see [the exact manual patch](docs/vapi-order-prompt-patch.md). The app does not overwrite saved Vapi prompts, tools, credentials or configuration.
+
+### Product Guides: native Vapi knowledge retrieval
+
+The fictional article [SEI Outdoors: Snowboard Setup, Boot Fit & First Ride Guide](docs/snowboardGuide.md) is copied unchanged from the supplied support document (article `SEI-SNOW-001`). It covers boot fitting, stance, bindings, setup, first-ride checks, and maintenance. GitHub hosts the readable source; publishing it here does **not** upload, index, or synchronize it with Vapi.
+
+| Capability | Runs where | Data source |
+| --- | --- | --- |
+| Function tools: `lookup_order`, `check_return_eligibility`, `check_inventory`, `get_membership_details` | Existing Vercel Function webhook `/api/tools/webhook` | Deterministic fictional business records in `src/lib/business.ts` |
+| Native Query tool: `search_sei_guides` | Vapi's managed knowledge retrieval | The guide you upload and associate with the Query tool in Vapi |
+
+No retrieval endpoint, database, or additional service is implemented in this app. `search_sei_guides` is deliberately absent from the Function catalog, webhook dispatcher, and mock debugger: it belongs to Vapi, not the Vercel business engine.
+
+Manual Vapi setup (see [Vapi's Query tool documentation](https://docs.vapi.ai/knowledge-base/using-query-tool)):
+
+1. Upload `docs/snowboardGuide.md` to Vapi.
+2. Create/configure the native Query tool `search_sei_guides` against that uploaded document, attach it to the existing assistant, and save/publish in Vapi. Preserve all existing Function tools.
+3. If needed, add this small instruction to your assistant prompt manually:
+
+   ```text
+   For snowboard boot fit, bindings, setup, first-ride checks, and maintenance questions, call search_sei_guides before answering. Use the retrieved article; if it does not cover the question, say so rather than inventing specifications. Use lookup_order for order status, and search_sei_guides for follow-up product guidance.
+   ```
+
+Start a new call and ask “What's the status of order 123?” Its existing mock record contains delivered snowboard boots. Follow with “My boots arrived. How should they fit?” Then try “What are snowboard bindings, and how do I attach my boots?” or “How should I set up my snowboard before my first ride?” The Demo Guide's Product Guides category includes copyable questions and the delivery-to-fitting scenario. It supplies prompts, not preloaded answers or fabricated search results.
+
+The existing timeline accepts tool names generically, including `search_sei_guides`, from supported SDK `tool-calls` / `tool-calls-result` events or tool messages in `conversation-update` history. Calls/results correlate only by actual tool-call IDs. A query invocation is shown only if Vapi exposes it; missing results remain unavailable rather than implying retrieval succeeded. Nested retrieved data remains inspectable in Technical details and Raw Events. The existing Vapi call-logs link is the fallback for inspecting native execution that is not forwarded to the browser; this app does not fetch private call records or add server-log access. Assistant answers alone are not evidence of a retrieval invocation. Native Query delivery is not guaranteed by the SDK's generic event types.
+
+Tests use explicitly synthetic SDK-shaped Query invocations, results, history snapshots and missing-telemetry cases. They verify rendering/correlation, not a completed Vapi upload or live retrieval. After configuring Vapi, manually verify that a fresh order-123-to-fitting call uses the existing order Function and the native Query tool, and that its answer is grounded in the uploaded article. Saved Vapi configuration is never changed by this frontend update.

@@ -16,6 +16,11 @@ const questions = [
   "Do you have snowboard boots in size 10?",
   "Can you find order 999?",
 ];
+const guideQuestions = [
+  "My snowboard boots from order 123 arrived. How should they fit?",
+  "What are snowboard bindings, and how do I attach my boots?",
+  "How should I set up my snowboard before my first ride?",
+];
 export function DemoGuide({
   orders,
   products,
@@ -25,7 +30,7 @@ export function DemoGuide({
   products: ProductReference[];
   id?: string;
 }) {
-  const [copied, setCopied] = useState<number | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({
     above: false,
@@ -57,6 +62,28 @@ export function DemoGuide({
       cancelAnimationFrame(frame);
     };
   }, []);
+  const questionButton = (q: string) => (
+    <button
+      key={q}
+      title="Copy question to say aloud"
+      onClick={async () => {
+        try {
+          await navigator.clipboard.writeText(q);
+          setCopied(q);
+        } catch {
+          setCopied(null);
+        }
+      }}
+    >
+      <span>“{q}”</span>
+      {copied === q ? (
+        <Check size={13} aria-label="Copied" />
+      ) : (
+        <Copy size={13} />
+      )}
+    </button>
+  );
+  const bootOrder = orders.find((o) => o.order_number === "123");
   return (
     <section className="panel guide-panel" id={id}>
       <div className="panel-head">
@@ -100,28 +127,40 @@ export function DemoGuide({
               <h3>Things to try</h3>
               <p>Say these aloud during a call. Click to copy.</p>
               <div className="guide-questions">
-                {questions.map((q, i) => (
-                  <button
-                    key={q}
-                    title="Copy question to say aloud"
-                    onClick={async () => {
-                      try {
-                        await navigator.clipboard.writeText(q);
-                        setCopied(i);
-                      } catch {
-                        setCopied(null);
-                      }
-                    }}
-                  >
-                    <span>“{q}”</span>
-                    {copied === i ? (
-                      <Check size={13} aria-label="Copied" />
-                    ) : (
-                      <Copy size={13} />
-                    )}
-                  </button>
-                ))}
+                {questions.map(questionButton)}
               </div>
+            </section>
+            <section className="guide-section product-guides">
+              <h3>Product Guides</h3>
+              <p>
+                Boot fit, bindings, and first-ride setup from one fictional
+                support article.
+              </p>
+              {bootOrder && (
+                <div className="guide-scenario">
+                  <strong>From delivery to first ride</strong>
+                  <p>
+                    Ask about order {bootOrder.order_number} (
+                    {bootOrder.product} · {bootOrder.status}), then ask how to
+                    fit your new boots.
+                  </p>
+                </div>
+              )}
+              <div className="guide-questions">
+                {guideQuestions.map(questionButton)}
+              </div>
+              <p className="guide-retrieval-note">
+                Requires the article uploaded and <code>search_sei_guides</code>{" "}
+                attached in Vapi.
+              </p>
+              <a
+                className="guide-article-link"
+                href="https://github.com/bhanukhanijau/sei-voice-ai-lab/blob/main/docs/snowboardGuide.md"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Read the source article ↗
+              </a>
             </section>
             <section className="guide-section">
               <h3>Sample orders</h3>

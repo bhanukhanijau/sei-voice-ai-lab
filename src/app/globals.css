@@ -2947,3 +2947,28 @@ footer {
       url("/brand/outdoors.jpg");
   }
 }
+
+.guide-scenario {
+  padding: 9px;
+  margin-bottom: 9px;
+  border-left: 2px solid var(--accent);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+  font-size: 11px;
+  line-height: 1.6;
+}
+.guide-scenario strong {
+  color: var(--accent);
+}
+.guide-scenario p {
+  margin: 4px 0 0;
+}
+.product-guides .guide-retrieval-note {
+  margin: 9px 0 6px;
+  font-size: 10px;
+}
+.guide-article-link {
+  font-size: 11px;
+  color: var(--accent);
+  text-underline-offset: 3px;
+}

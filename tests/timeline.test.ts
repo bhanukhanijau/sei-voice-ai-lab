@@ -263,3 +263,111 @@ test("timeline renders business data and errors with JSON inside collapsed techn
   assert.doesNotMatch(html, /raw-call-events/);
   assert.match(html, /calls\/verified-call/);
 });
+
+test("native Query tool events retain real IDs, arguments and forwarded results without adding a backend tool", async () => {
+  // Representative installed-SDK ToolCall / ToolCallResult shapes; not live retrieval evidence.
+  const call = {
+    id: "query-fixture",
+    type: "function",
+    function: {
+      name: "search_sei_guides",
+      arguments: '{"query":"How should snowboard boots fit?"}',
+    },
+  };
+  let s = normalizeEvent(
+    emptyTimeline(),
+    input({ type: "tool-calls", toolCallList: [call] }),
+  );
+  assert.equal(s.entries[0].title, "search_sei_guides");
+  assert.equal(s.entries[0].status, "pending");
+  assert.deepEqual(s.entries[0].args, {
+    query: "How should snowboard boots fit?",
+  });
+  assert.equal(s.entries[0].result, undefined);
+  const result = {
+    matches: [
+      { document: "SEI-SNOW-001", text: "Synthetic retrieval fixture only." },
+    ],
+  };
+  s = normalizeEvent(
+    s,
+    input({
+      type: "tool-calls-result",
+      toolCallResult: {
+        name: "search_sei_guides",
+        toolCallId: call.id,
+        result: JSON.stringify(result),
+      },
+    }),
+  );
+  assert.equal(s.entries[0].id, "tool-query-fixture");
+  assert.equal(s.entries[0].status, "success");
+  assert.deepEqual(s.entries[0].result, result);
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { ExecutionTimeline } =
+    await import("../src/components/execution-timeline");
+  const html = renderToStaticMarkup(
+    createElement(ExecutionTimeline, { timeline: s, callId: "" }),
+  );
+  assert.match(html, /Tool: search_sei_guides/);
+  assert.match(html, /Synthetic retrieval fixture only/);
+  assert.match(html, /Technical details/);
+  assert.doesNotMatch(html, /<details[^>]*open/);
+});
+
+test("native Query calls in conversation history correlate without duplicate or invented results", () => {
+  const call = {
+    id: "query-history",
+    type: "function",
+    function: { name: "search_sei_guides", arguments: '{"query":"bindings"}' },
+  };
+  const history = {
+    type: "conversation-update",
+    messagesOpenAIFormatted: [
+      { role: "assistant", tool_calls: [call] },
+      {
+        role: "tool",
+        tool_call_id: call.id,
+        content: "Synthetic query history result",
+      },
+    ],
+  };
+  let s = normalizeEvent(emptyTimeline(), input(history));
+  s = normalizeEvent(s, input(history));
+  assert.equal(s.entries.length, 1);
+  assert.equal(s.entries[0].title, "search_sei_guides");
+  assert.equal(s.entries[0].result, "Synthetic query history result");
+  const dialogueOnly = normalizeEvent(
+    emptyTimeline(),
+    input({
+      type: "transcript",
+      role: "assistant",
+      transcriptType: "final",
+      transcript: "I found the guide with search_sei_guides.",
+    }),
+  );
+  assert.equal(dialogueOnly.entries.filter((e) => e.kind === "tool").length, 0);
+});
+
+test("Product Guides render the actual order-123 scenario and copyable questions with a secure source link", async () => {
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { DemoGuide } = await import("../src/components/demo-guide");
+  const { orders, products } = await import("../src/lib/business");
+  const { tools } = await import("../src/lib/catalog");
+  assert.equal("search_sei_guides" in tools, false);
+  const html = renderToStaticMarkup(
+    createElement(DemoGuide, { orders, products }),
+  );
+  assert.match(html, /Product Guides/);
+  assert.match(html, /order 123 \(Snowboard boots · delivered\)/);
+  assert.match(html, /How should they fit/);
+  assert.match(html, /What are snowboard bindings/);
+  assert.match(html, /first ride/);
+  assert.match(html, /Requires the article uploaded/);
+  assert.match(
+    html,
+    /href="https:\/\/github.com\/bhanukhanijau\/sei-voice-ai-lab\/blob\/main\/docs\/snowboardGuide.md" target="_blank" rel="noopener noreferrer"/,
+  );
+});

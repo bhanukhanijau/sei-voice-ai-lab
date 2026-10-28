@@ -347,6 +347,13 @@ export default function Lab({
                 icon: FileCode2,
               },
               {
+                label: "Knowledge Article",
+                path: "/blob/main/docs/snowboardGuide.md",
+                title:
+                  "SEI Outdoors: Snowboard Setup, Boot Fit & First Ride Guide. Source document for manual upload to Vapi.",
+                icon: BookOpen,
+              },
+              {
                 label: "Mock Data & Business Logic",
                 path: "/blob/main/src/lib/business.ts",
                 title:
