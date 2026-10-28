@@ -10,6 +10,31 @@ const json = (value: unknown, status = 200) =>
     status,
     headers: { "Cache-Control": "no-store" },
   });
+const maxBodyBytes = 100_000;
+async function readBoundedBody(req: Request) {
+  const declared = req.headers.get("content-length");
+  if (declared && Number(declared) > maxBodyBytes) return null;
+  if (!req.body) return "";
+  const reader = req.body.getReader();
+  const decoder = new TextDecoder();
+  let size = 0,
+    text = "";
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > maxBodyBytes) {
+        await reader.cancel();
+        return null;
+      }
+      text += decoder.decode(value, { stream: true });
+    }
+    return text + decoder.decode();
+  } finally {
+    reader.releaseLock();
+  }
+}
 async function handle(req: Request) {
   const url = new URL(req.url),
     path = url.pathname.replace("/api/", "");
@@ -37,9 +62,8 @@ async function handle(req: Request) {
     }
     if ((webhook || path === "test") && req.method === "POST") {
       const mode = parseMode(url.searchParams.get("mode"));
-      const text = await req.text();
-      if (text.length > 100000)
-        return json({ error: "Payload too large" }, 413);
+      const text = await readBoundedBody(req);
+      if (text === null) return json({ error: "Payload too large" }, 413);
       const payload = JSON.parse(text);
       const start = Date.now();
       const output = await handleToolCalls(payload, mode);

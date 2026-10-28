@@ -12,3 +12,15 @@ coverage
 
 .vercel
 *.log
+
+# Local credential material and machine-specific files
+.DS_Store
+.npmrc
+.netrc
+.pypirc
+.ssh
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json

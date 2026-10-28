@@ -361,3 +361,40 @@ test("slow mode waits eight seconds and supports all three tools in one request"
   assert.equal(rows(r.body).length, 3);
   assert.ok(Date.now() - start >= 7900);
 });
+
+test("webhook and debugger reject oversized bodies before parsing or execution", async () => {
+  for (const path of ["tools/webhook", "test"]) {
+    const advertised = new Request("http://localhost/api/" + path, {
+      method: "POST",
+      headers: { "Content-Length": "100001" },
+      body: "{}",
+    });
+    assert.equal((await POST(advertised)).status, 413);
+    const oversized = req(path, { padding: "x".repeat(100001) });
+    assert.equal((await POST(oversized)).status, 413);
+    const multibyte = req(path, { padding: "雪".repeat(34000) });
+    assert.equal((await POST(multibyte)).status, 413);
+  }
+});
+
+test("request byte limit applies to streamed bodies without Content-Length", async () => {
+  let cancelled = false,
+    pulls = 0;
+  const body = new ReadableStream<Uint8Array>({
+    pull(controller) {
+      pulls++;
+      controller.enqueue(new Uint8Array(60000));
+    },
+    cancel() {
+      cancelled = true;
+    },
+  });
+  const request = new Request("http://localhost/api/tools/webhook", {
+    method: "POST",
+    body,
+    duplex: "half",
+  } as RequestInit);
+  assert.equal((await POST(request)).status, 413);
+  assert.equal(cancelled, true);
+  assert.ok(pulls <= 3, "oversized input should not be fully buffered");
+});
