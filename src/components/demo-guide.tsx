@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Copy, Check, BookOpen, ChevronDown } from "lucide-react";
+import { BookOpen, ChevronDown } from "lucide-react";
 export type OrderReference = {
   order_number: string;
   status: string;
@@ -11,17 +11,18 @@ export type ProductReference = {
   variants: { size: string; color: string; quantity: number }[];
 };
 const questions = [
-  { category: "Order Tracking", question: "What's the status of order 123?" },
+  { category: "Orders", question: "What's the status of order 123?" },
   { category: "Returns", question: "Can I return order 123?" },
   {
     category: "Inventory",
     question: "Do you have snowboard boots in size 10?",
   },
   {
-    category: "Snowboard Help",
+    category: "Guides",
     question: "How should my snowboard boots fit?",
   },
-  { category: "Setup Help", question: "How do I set up my snowboard?" },
+  { category: "Guides", question: "How do I set up my snowboard?" },
+  { category: "Errors", question: "Can you find order 999?" },
 ];
 export function DemoGuide({
   orders,
@@ -32,7 +33,6 @@ export function DemoGuide({
   products: ProductReference[];
   id?: string;
 }) {
-  const [copied, setCopied] = useState<string | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
   const [edges, setEdges] = useState({
     above: false,
@@ -64,33 +64,6 @@ export function DemoGuide({
       cancelAnimationFrame(frame);
     };
   }, []);
-  const questionButton = ({
-    category,
-    question: q,
-  }: (typeof questions)[number]) => (
-    <button
-      key={q}
-      title="Copy question to say aloud"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(q);
-          setCopied(q);
-        } catch {
-          setCopied(null);
-        }
-      }}
-    >
-      <span>
-        <small className="question-capability">{category}</small>
-        <span className="question-text">“{q}”</span>
-      </span>
-      {copied === q ? (
-        <Check size={13} aria-label="Copied" />
-      ) : (
-        <Copy size={13} />
-      )}
-    </button>
-  );
   return (
     <section className="panel guide-panel" id={id}>
       <div className="panel-head">
@@ -111,19 +84,25 @@ export function DemoGuide({
         >
           <div className="guide-content">
             <section className="guide-section guide-quick-start">
-              <h3>Quick start</h3>
+              <h3>Quick Start</h3>
               <p>
-                Click <strong>Start Call</strong>, then say one of the questions
-                below. Watch the conversation and tool activity update in real
-                time.
+                Click <strong>Start Call</strong>, ask one of the questions
+                below, and watch the conversation and tool activity.
               </p>
             </section>
-            <section className="guide-section things-to-try">
-              <h3>Things to Try</h3>
-              <p>Say these aloud during a call. Click to copy.</p>
-              <div className="guide-questions primary-questions">
-                {questions.map(questionButton)}
-              </div>
+            <section className="guide-section try-asking">
+              <h3>Try Asking</h3>
+              <p>Start a call, then try asking these questions aloud.</p>
+              <ul className="suggested-questions">
+                {questions.map(({ category, question }) => (
+                  <li className="suggested-question" key={question}>
+                    <span className="question-badge">{category}</span>
+                    <span className="suggested-question-text">
+                      “{question}”
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </section>
             <section className="guide-section">
               <h3>Sample Orders</h3>

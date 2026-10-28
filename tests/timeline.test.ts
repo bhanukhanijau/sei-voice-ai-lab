@@ -361,7 +361,7 @@ test("native Query calls in conversation history correlate without duplicate or 
   );
 });
 
-test("compact guide prioritizes five spoken questions before actual orders and keeps a secure article link", async () => {
+test("voice-first guide shows six noninteractive examples before actual orders and keeps a secure article link", async () => {
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
   const { DemoGuide } = await import("../src/components/demo-guide");
@@ -373,15 +373,14 @@ test("compact guide prioritizes five spoken questions before actual orders and k
   );
   assert.match(html, /Snowboard Setup Guide/);
   for (const order of orders) assert.ok(html.includes(order.order_number));
-  assert.equal(
-    (html.match(/title="Copy question to say aloud"/g) || []).length,
-    5,
-  );
+  assert.equal((html.match(/class="suggested-question"/g) || []).length, 6);
+  assert.doesNotMatch(html, /<button|Click to copy|Copy question|Copied/);
+  assert.match(html, /Start a call, then try asking these questions aloud/);
   assert.match(html, /How should my snowboard boots fit/);
   assert.match(html, /How do I set up my snowboard/);
   assert.match(html, /first ride/);
   assert.doesNotMatch(html, /RAG|search_sei_guides/);
-  assert.ok(html.indexOf("Things to Try") < html.indexOf("Sample Orders"));
+  assert.ok(html.indexOf("Try Asking") < html.indexOf("Sample Orders"));
   assert.match(
     html,
     /href="https:\/\/github.com\/bhanukhanijau\/sei-voice-ai-lab\/blob\/main\/docs\/snowboardGuide.md" target="_blank" rel="noopener noreferrer"/,
