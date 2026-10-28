@@ -152,7 +152,11 @@ export function ExecutionTimeline({
                             : ""}
                         </span>
                       )}
-                      {e.text && <p className="execution-speech">“{e.text}”</p>}
+                      {e.text &&
+                        e.kind !== "assistant" &&
+                        e.kind !== "user" && (
+                          <p className="execution-speech">“{e.text}”</p>
+                        )}
                       {e.args !== undefined && (
                         <div className="argument-summary">
                           <span>Arguments</span>{" "}
@@ -202,6 +206,7 @@ export function ExecutionTimeline({
                         <pre>
                           {JSON.stringify(
                             {
+                              transcript: e.text,
                               arguments: e.args,
                               response: e.result,
                               evidence: e.raw.map((i) => timeline.raw[i]),
@@ -219,7 +224,11 @@ export function ExecutionTimeline({
             {timeline.live && (
               <div className="timeline-live" role="status">
                 <span className="dot" />
-                {timeline.live}
+                {timeline.live.startsWith("Assistant:")
+                  ? "Assistant responding…"
+                  : timeline.live.startsWith("User:")
+                    ? "User speaking…"
+                    : timeline.live}
               </div>
             )}
           </>

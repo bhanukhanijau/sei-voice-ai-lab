@@ -2754,3 +2754,163 @@ footer {
     height: min(60dvh, calc(100dvh - 290px));
   }
 }
+
+/* Keep the workspace geometry; strengthen the three functional surfaces. */
+.playground-workspace > .panel,
+.guide-drawer-content .guide-panel {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+}
+.playground-workspace .panel-head,
+.guide-panel .panel-head {
+  margin: -14px -14px 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 22%, var(--line));
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+}
+.playground-workspace .conversation-panel .panel-head {
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+}
+.playground-workspace .execution-panel .panel-head {
+  background: color-mix(in srgb, var(--muted) 9%, var(--panel));
+}
+.playground-workspace .panel-head h2,
+.guide-panel .panel-head h2 {
+  font-weight: 700;
+}
+.guide-scroll-shell {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+.guide-scroll-shell .guide-scroll {
+  height: 100%;
+  scrollbar-width: auto;
+  scrollbar-color: var(--accent) var(--input);
+  scrollbar-gutter: stable;
+}
+.guide-scroll::-webkit-scrollbar {
+  width: 9px;
+}
+.guide-scroll::-webkit-scrollbar-track {
+  background: var(--input);
+  border-radius: 8px;
+}
+.guide-scroll::-webkit-scrollbar-thumb {
+  background: var(--accent);
+  border: 2px solid var(--input);
+  border-radius: 8px;
+}
+.guide-scroll-shell.has-above::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 12px;
+  height: 14px;
+  background: linear-gradient(var(--panel), transparent);
+  pointer-events: none;
+  z-index: 1;
+}
+.guide-scroll-hint {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 12px;
+  height: 42px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 5px;
+  padding-bottom: 3px;
+  background: linear-gradient(transparent, var(--panel) 65%);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 600;
+  pointer-events: none;
+}
+.guide-content {
+  padding-bottom: 12px;
+}
+.guide-section h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+}
+.guide-section + .guide-section {
+  border-top-color: color-mix(in srgb, var(--accent) 26%, var(--line));
+}
+.guide-questions button {
+  font-weight: 500;
+}
+.guide-orders .order-record > strong {
+  font-family: monospace;
+  color: var(--accent);
+}
+.guide-orders .order-record > span {
+  font-weight: 500;
+}
+.guide-orders .order-status {
+  padding: 2px 4px;
+  border-radius: 4px;
+  background: var(--input);
+}
+.playground-intro {
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.playground-intro h1 {
+  font-size: clamp(23px, 2vw, 30px);
+  margin-bottom: 7px;
+}
+.playground-intro p {
+  margin: 0;
+  line-height: 1.5;
+}
+.playground-intro .hero-support {
+  margin-top: 4px;
+  font-size: 12px;
+}
+.message-evidence {
+  display: block;
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
+@media (max-width: 780px) {
+  .guide-scroll-shell {
+    flex: none;
+  }
+  .guide-scroll-shell .guide-scroll {
+    height: auto;
+  }
+  .guide-scroll-hint,
+  .guide-scroll-shell.has-above::before {
+    display: none;
+  }
+  .playground-intro .hero-support {
+    font-size: 12px;
+  }
+}
+/* An always-visible position cue also covers systems that hide native scrollbars. */
+.guide-scroll-rail {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 5px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  pointer-events: none;
+}
+.guide-scroll-rail span {
+  position: absolute;
+  width: 100%;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--accent) 65%, var(--panel));
+}
+@media (max-width: 780px) {
+  .guide-scroll-rail {
+    display: none;
+  }
+}

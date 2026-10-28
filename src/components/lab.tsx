@@ -16,12 +16,12 @@ import {
   PhoneOff,
   Play,
   Sun,
-  Workflow,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import type { Mode } from "@/lib/catalog";
 import Image from "next/image";
 import { Conversation } from "./conversation";
+import { emptyConversation, normalizeConversation } from "@/lib/conversation";
 import {
   DemoGuide,
   microphoneMessage,
@@ -132,7 +132,12 @@ export default function Lab({
     [volume, setVolume] = useState(0),
     [elapsed, setElapsed] = useState(0),
     [callId, setCallId] = useState(""),
-    [messages, setMessages] = useState<{ role: string; text: string }[]>([]),
+    [conversation, dispatchConversation] = useReducer(
+      (state: ReturnType<typeof emptyConversation>, event: RawEvent | null) =>
+        event ? normalizeConversation(state, event) : emptyConversation(),
+      undefined,
+      emptyConversation,
+    ),
     [timeline, dispatchTimeline] = useReducer(
       (state: ReturnType<typeof emptyTimeline>, event: RawEvent | null) =>
         event ? normalizeEvent(state, event) : emptyTimeline(),
@@ -179,10 +184,13 @@ export default function Lab({
   async function start() {
     if (!boot) return;
     setState("Connecting");
-    setMessages([]);
+    dispatchConversation(null);
     dispatchTimeline(null);
-    const record = (event: string, payload: unknown = {}) =>
-      dispatchTimeline({ event, payload, receivedAt: Date.now() });
+    const record = (event: string, payload: unknown = {}) => {
+      const input = { event, payload, receivedAt: Date.now() };
+      dispatchTimeline(input);
+      dispatchConversation(input);
+    };
     setCallId("");
     setElapsed(0);
     try {
@@ -217,16 +225,12 @@ export default function Lab({
       });
       v.on("message", (m) => {
         record("message", m);
-        if (m.type === "transcript" && m.transcriptType === "final")
-          setMessages((prev) => [
-            ...prev,
-            { role: m.role, text: m.transcript },
-          ]);
       });
       // The SDK's generated type incorrectly declares a scalar; the Vapi API accepts an array.
       // Only event subscriptions are overridden. Native tools and model settings stay in Vapi.
       const subscriptions = [
         "conversation-update",
+        "assistant.speechStarted",
         "function-call",
         "function-call-result",
         "hang",
@@ -349,12 +353,6 @@ export default function Lab({
                   "Fictional orders, inventory, returns, and customer information.",
                 icon: Database,
               },
-              {
-                label: "Execution Engine",
-                path: "/blob/main/src/lib/engine.ts",
-                title: "Tool execution and failure simulation.",
-                icon: Workflow,
-              },
             ].map(({ label, path, title, icon: Icon }) => (
               <a
                 key={label}
@@ -403,9 +401,12 @@ export default function Lab({
                 <div className="eyebrow">READY FOR OUTSIDE. HERE TO HELP.</div>
                 <h1>Meet your SEI AI Support Agent</h1>
                 <p>
-                  Experience a voice-powered customer support agent that can
-                  check orders, answer return questions, and look up outdoor
-                  gear availability.
+                  SEI Outdoors is a fictional retailer of camping, hiking, snow
+                  sports, and outdoor equipment.
+                </p>
+                <p className="hero-support">
+                  Talk to our AI agent about orders, returns, and gear
+                  availability, and watch the tools work in real time.
                 </p>
               </div>
               <span className="fictional-label">INTERACTIVE VOICE DEMO</span>
@@ -531,7 +532,7 @@ export default function Lab({
                   products={productReference}
                   id="demo-guide"
                 />
-                <Conversation messages={messages} />
+                <Conversation messages={conversation.messages} />
                 <ExecutionTimeline timeline={timeline} callId={callId} />
               </div>
               <p className="public-demo-disclaimer">

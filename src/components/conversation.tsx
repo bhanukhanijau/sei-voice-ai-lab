@@ -3,7 +3,11 @@ import { useEffect, useRef } from "react";
 import { AudioLines, ArrowDown, MessageSquare } from "lucide-react";
 import { Button } from "./ui/button";
 import { shouldFollow } from "@/lib/timeline";
-export type ConversationMessage = { role: string; text: string };
+import {
+  conversationText,
+  conversationLabel,
+  type ConversationMessage,
+} from "@/lib/conversation";
 export function Conversation({
   messages,
 }: {
@@ -39,20 +43,15 @@ export function Conversation({
         }}
       >
         {messages.length ? (
-          messages.map((m, i) => (
-            <div className={`conversation-message ${m.role}`} key={i}>
+          messages.map((m) => (
+            <div className={`conversation-message ${m.role}`} key={m.id}>
               <span className="speaker-mark">
                 {m.role === "user" ? "Y" : "S"}
               </span>
               <div>
-                <small>
-                  {m.role === "user"
-                    ? "YOU"
-                    : m.role === "assistant"
-                      ? "SEI SUPPORT"
-                      : m.role.toUpperCase()}
-                </small>
-                <p>{m.text}</p>
+                <small>{m.role === "user" ? "YOU" : "SEI SUPPORT"}</small>
+                <p>{conversationText(m) || "Listening for speech text…"}</p>
+                <span className="message-evidence">{conversationLabel(m)}</span>
               </div>
             </div>
           ))
@@ -71,7 +70,7 @@ export function Conversation({
         )}
       </div>
       <div className="conversation-footer">
-        <span>Finalized speech · Live during your call</span>
+        <span>Live transcripts · Generated text marked provisional</span>
         <Button
           onClick={() => {
             follow.current = true;
