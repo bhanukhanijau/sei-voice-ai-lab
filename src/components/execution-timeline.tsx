@@ -107,6 +107,8 @@ export function ExecutionTimeline({
                           : e.kind === "interruption"
                             ? Hand
                             : Plug;
+                const knowledgeSearch =
+                  e.kind === "tool" && e.title === "search_sei_guides";
                 const status =
                   e.status === "success"
                     ? "Success"
@@ -130,10 +132,17 @@ export function ExecutionTimeline({
                     <div className="execution-content">
                       <div className="execution-title">
                         <strong>
-                          {e.kind === "tool" ? `Tool: ${e.title}` : e.title}
+                          {knowledgeSearch
+                            ? "Knowledge Search (RAG)"
+                            : e.kind === "tool"
+                              ? `Tool: ${e.title}`
+                              : e.title}
                         </strong>
                         <time>{relativeTime(e.at, timeline.startedAt)}</time>
                       </div>
+                      {knowledgeSearch && (
+                        <code className="execution-tool-name">{e.title}</code>
+                      )}
                       {status && (
                         <span
                           className={`execution-status ${e.status || ""} ${e.category === "Business error" ? "business-error" : ""}`}

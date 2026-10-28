@@ -310,13 +310,14 @@ test("native Query tool events retain real IDs, arguments and forwarded results 
   const html = renderToStaticMarkup(
     createElement(ExecutionTimeline, { timeline: s, callId: "" }),
   );
-  assert.match(html, /Tool: search_sei_guides/);
+  assert.match(html, /Knowledge Search \(RAG\)/);
+  assert.match(html, /class="execution-tool-name">search_sei_guides/);
   assert.match(html, /Synthetic retrieval fixture only/);
   assert.match(html, /Technical details/);
   assert.doesNotMatch(html, /<details[^>]*open/);
 });
 
-test("native Query calls in conversation history correlate without duplicate or invented results", () => {
+test("native Query calls in conversation history correlate without duplicate or invented results", async () => {
   const call = {
     id: "query-history",
     type: "function",
@@ -348,9 +349,19 @@ test("native Query calls in conversation history correlate without duplicate or 
     }),
   );
   assert.equal(dialogueOnly.entries.filter((e) => e.kind === "tool").length, 0);
+  const { createElement } = await import("react");
+  const { renderToStaticMarkup } = await import("react-dom/server");
+  const { ExecutionTimeline } =
+    await import("../src/components/execution-timeline");
+  assert.doesNotMatch(
+    renderToStaticMarkup(
+      createElement(ExecutionTimeline, { timeline: dialogueOnly, callId: "" }),
+    ),
+    /Knowledge Search \(RAG\)/,
+  );
 });
 
-test("Product Guides render the actual order-123 scenario and copyable questions with a secure source link", async () => {
+test("compact guide prioritizes five spoken questions before actual orders and keeps a secure article link", async () => {
   const { createElement } = await import("react");
   const { renderToStaticMarkup } = await import("react-dom/server");
   const { DemoGuide } = await import("../src/components/demo-guide");
@@ -360,14 +371,17 @@ test("Product Guides render the actual order-123 scenario and copyable questions
   const html = renderToStaticMarkup(
     createElement(DemoGuide, { orders, products }),
   );
-  assert.match(html, /Product Guides/);
-  assert.match(html, /order 123 \(Snowboard boots · delivered\)/);
+  assert.match(html, /Snowboard Setup Guide/);
+  for (const order of orders) assert.ok(html.includes(order.order_number));
+  assert.equal(
+    (html.match(/title="Copy question to say aloud"/g) || []).length,
+    5,
+  );
   assert.match(html, /How should my snowboard boots fit/);
   assert.match(html, /How do I set up my snowboard/);
   assert.match(html, /first ride/);
-  assert.match(html, /Knowledge Search \(RAG\)/);
-  assert.match(html, /search_sei_guides/);
-  assert.ok(html.indexOf("Sample Orders") < html.indexOf("Things to Try"));
+  assert.doesNotMatch(html, /RAG|search_sei_guides/);
+  assert.ok(html.indexOf("Things to Try") < html.indexOf("Sample Orders"));
   assert.match(
     html,
     /href="https:\/\/github.com\/bhanukhanijau\/sei-voice-ai-lab\/blob\/main\/docs\/snowboardGuide.md" target="_blank" rel="noopener noreferrer"/,

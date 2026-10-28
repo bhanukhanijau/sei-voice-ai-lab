@@ -2278,7 +2278,10 @@ footer {
   min-height: 82px;
 }
 .playground-workspace {
-  grid-template-columns: minmax(0, 0.35fr) minmax(0, 0.32fr) minmax(0, 0.33fr);
+  grid-template-columns: minmax(0, 0.4fr) minmax(300px, 0.3fr) minmax(
+      300px,
+      0.3fr
+    );
   gap: 12px;
   flex: 1;
   min-height: 0;
@@ -3039,4 +3042,53 @@ footer {
 }
 .playground-workspace .argument-summary code {
   white-space: pre-wrap;
+}
+
+/* Put five spoken examples within easy reach before the reference data. */
+.guide-section + .guide-section {
+  margin-top: 11px;
+  padding-top: 10px;
+}
+.guide-section h3 {
+  margin-bottom: 5px;
+}
+.guide-section > p {
+  margin-bottom: 6px;
+  font-size: 11px;
+  line-height: 1.45;
+}
+.guide-quick-start > p {
+  margin-bottom: 0;
+}
+.primary-questions {
+  gap: 5px;
+}
+.primary-questions button {
+  padding: 6px 8px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+.question-capability {
+  display: block;
+  margin-bottom: 1px;
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--muted);
+  font-weight: 500;
+}
+.question-text {
+  display: block;
+}
+.guide-section.product-guides {
+  padding: 10px;
+}
+.guide-products summary {
+  padding: 6px 0;
+}
+.execution-tool-name {
+  display: block;
+  margin-top: 3px;
+  font-size: 10px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
 }

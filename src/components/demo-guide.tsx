@@ -10,24 +10,18 @@ export type ProductReference = {
   product_name: string;
   variants: { size: string; color: string; quantity: number }[];
 };
-const questionGroups = [
-  {
-    category: "Order tracking",
-    questions: ["What's the status of order 123?"],
-  },
-  { category: "Returns", questions: ["Can I return order 123?"] },
+const questions = [
+  { category: "Order Tracking", question: "What's the status of order 123?" },
+  { category: "Returns", question: "Can I return order 123?" },
   {
     category: "Inventory",
-    questions: ["Do you have snowboard boots in size 10?"],
+    question: "Do you have snowboard boots in size 10?",
   },
   {
-    category: "Knowledge Search (RAG)",
-    questions: [
-      "How should my snowboard boots fit?",
-      "How do I set up my snowboard?",
-    ],
+    category: "Snowboard Help",
+    question: "How should my snowboard boots fit?",
   },
-  { category: "Troubleshooting", questions: ["Can you find order 999?"] },
+  { category: "Setup Help", question: "How do I set up my snowboard?" },
 ];
 export function DemoGuide({
   orders,
@@ -70,7 +64,10 @@ export function DemoGuide({
       cancelAnimationFrame(frame);
     };
   }, []);
-  const questionButton = (q: string) => (
+  const questionButton = ({
+    category,
+    question: q,
+  }: (typeof questions)[number]) => (
     <button
       key={q}
       title="Copy question to say aloud"
@@ -83,7 +80,10 @@ export function DemoGuide({
         }
       }}
     >
-      <span>“{q}”</span>
+      <span>
+        <small className="question-capability">{category}</small>
+        <span className="question-text">“{q}”</span>
+      </span>
       {copied === q ? (
         <Check size={13} aria-label="Copied" />
       ) : (
@@ -91,7 +91,6 @@ export function DemoGuide({
       )}
     </button>
   );
-  const bootOrder = orders.find((o) => o.order_number === "123");
   return (
     <section className="panel guide-panel" id={id}>
       <div className="panel-head">
@@ -114,13 +113,20 @@ export function DemoGuide({
             <section className="guide-section guide-quick-start">
               <h3>Quick start</h3>
               <p>
-                Click <strong>Start Call</strong>, ask about a sample order or
-                product, and watch the agent use its tools in real time.
+                Click <strong>Start Call</strong>, then say one of the questions
+                below. Watch the conversation and tool activity update in real
+                time.
               </p>
+            </section>
+            <section className="guide-section things-to-try">
+              <h3>Things to Try</h3>
+              <p>Say these aloud during a call. Click to copy.</p>
+              <div className="guide-questions primary-questions">
+                {questions.map(questionButton)}
+              </div>
             </section>
             <section className="guide-section">
               <h3>Sample Orders</h3>
-              <p>Fictional orders you can ask the agent about.</p>
               <div className="guide-orders">
                 {orders.map((o) => (
                   <div className="order-record" key={o.order_number}>
@@ -139,45 +145,11 @@ export function DemoGuide({
                 </div>
               </div>
             </section>
-            <section className="guide-section things-to-try">
-              <h3>Things to Try</h3>
-              <p>
-                Speak these questions aloud during a call. Click a question to
-                copy it.
-              </p>
-              {questionGroups.map(({ category, questions }) => (
-                <div
-                  key={category}
-                  className={`guide-question-group ${category === "Knowledge Search (RAG)" ? "knowledge-example" : ""}`}
-                >
-                  <h4>{category}</h4>
-                  <div className="guide-questions">
-                    {questions.map(questionButton)}
-                  </div>
-                </div>
-              ))}
-            </section>
             <section className="guide-section product-guides">
-              <h3>Product Guides · Knowledge Search (RAG)</h3>
+              <h3>Snowboard Setup Guide</h3>
               <p>
-                The agent can search SEI&apos;s snowboard setup guide to answer
-                questions about boot fitting, bindings, and preparing for a
-                first ride.
-              </p>
-              {bootOrder && (
-                <div className="guide-scenario">
-                  <strong>From delivery to first ride</strong>
-                  <p>
-                    Ask about order {bootOrder.order_number} (
-                    {bootOrder.product} · {bootOrder.status}), then ask how to
-                    fit your new boots.
-                  </p>
-                </div>
-              )}
-              <p className="guide-retrieval-note">
-                Uses Vapi&apos;s native <code>search_sei_guides</code> tool. The
-                timeline shows searches only when Vapi exposes the events; call
-                logs remain available for details.
+                Ask about snowboard boot fit, bindings, or getting ready for
+                your first ride.
               </p>
               <a
                 className="guide-article-link"
@@ -190,9 +162,6 @@ export function DemoGuide({
             </section>
             <section className="guide-section">
               <h3>Inventory Products</h3>
-              <p>
-                Expand a product for real demo sizes, colors, and availability.
-              </p>
               <div className="guide-products">
                 {products.map((p) => {
                   const available = p.variants.filter((v) => v.quantity > 0),
