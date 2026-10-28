@@ -34,7 +34,7 @@ export function ExecutionTimeline({
       scroller.current.scrollTop = scroller.current.scrollHeight;
   }, [timeline, rawView]);
   return (
-    <section className="panel execution-panel">
+    <section className="panel execution-panel" id="execution">
       <div className="panel-head">
         <h2>Execution timeline</h2>
         <div className="timeline-controls">

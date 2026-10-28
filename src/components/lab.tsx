@@ -5,7 +5,9 @@ import {
   AudioLines,
   Box,
   Bug,
-  ChevronRight,
+  ExternalLink,
+  BookOpen,
+  ChevronDown,
   Headphones,
   Mic,
   PhoneOff,
@@ -285,7 +287,7 @@ export default function Lab({
     );
   return (
     <div className={`app ${page === "Playground" ? "playground-app" : ""}`}>
-      <aside>
+      <aside className="app-sidebar" aria-label="Navigation and utilities">
         <div className="brand">
           <Image
             src="/brand/sei-mark.svg"
@@ -314,39 +316,39 @@ export default function Lab({
                   setError("");
                 }}
               >
-                <NavIcon size={17} />
+                <NavIcon size={15} />
                 {String(name)}
               </button>
             );
           })}
         </nav>
-        <div className="aside-footer">
-          Fictional SEI data<p>No database · No saved sessions</p>
-        </div>
-      </aside>
-      <div className="workspace">
-        <header>
-          <span>
-            SEI Lab <ChevronRight size={13} />
-            <b>{page}</b>
-          </span>
-          <div>
+        <div className="sidebar-bottom">
+          <div className="sidebar-utilities">
+            <p className="nav-label">UTILITIES</p>
             <Button
+              variant="ghost"
               onClick={() => document.documentElement.classList.toggle("light")}
               aria-label="Toggle color theme"
             >
-              <Sun size={15} />
+              <Sun size={14} />
+              <span>Light / Dark</span>
             </Button>
             <a
-              className="btn outline"
+              className="btn ghost"
               href="https://dashboard.vapi.ai"
               target="_blank"
               rel="noreferrer"
             >
-              Open Vapi ↗
+              <ExternalLink size={14} />
+              <span>Open Vapi</span>
             </a>
           </div>
-        </header>
+          <div className="aside-footer">
+            Fictional SEI data<p>No saved sessions</p>
+          </div>
+        </div>
+      </aside>
+      <div className="workspace">
         <main>
           {page === "Playground" ? (
             <div className="playground-intro">
@@ -455,12 +457,33 @@ export default function Lab({
                   </div>
                 )}
               </section>
-              <DemoGuide
-                orders={orderReference}
-                products={productReference}
-                active={state !== "Disconnected"}
-              />
+              <details className="guide-drawer">
+                <summary>
+                  <BookOpen size={14} />
+                  Demo guide & sample data
+                  <ChevronDown size={13} />
+                </summary>
+                <div className="guide-drawer-content">
+                  <DemoGuide
+                    orders={orderReference}
+                    products={productReference}
+                  />
+                </div>
+              </details>
+              <nav
+                className="mobile-workspace-links"
+                aria-label="Workspace sections"
+              >
+                <a href="#conversation">Conversation</a>
+                <a href="#execution">Execution timeline</a>
+                <a href="#demo-guide">Demo guide</a>
+              </nav>
               <div className="playground-workspace">
+                <DemoGuide
+                  orders={orderReference}
+                  products={productReference}
+                  id="demo-guide"
+                />
                 <Conversation messages={messages} />
                 <ExecutionTimeline timeline={timeline} callId={callId} />
               </div>

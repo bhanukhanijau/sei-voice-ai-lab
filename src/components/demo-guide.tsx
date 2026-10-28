@@ -1,15 +1,6 @@
 "use client";
 import { useState } from "react";
-import {
-  Copy,
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Package,
-  RotateCcw,
-  Backpack,
-  SearchX,
-} from "lucide-react";
+import { Copy, Check, BookOpen, ChevronDown } from "lucide-react";
 export type OrderReference = {
   order_number: string;
   status: string;
@@ -19,65 +10,85 @@ export type ProductReference = {
   product_name: string;
   variants: { size: string; color: string; quantity: number }[];
 };
-const scenarios = [
-  {
-    name: "Order tracking",
-    icon: Package,
-    description:
-      "Ask about the shipping or delivery status of one of the sample orders.",
-    question: "Hey, can you tell me the status of order 123?",
-  },
-  {
-    name: "Returns",
-    icon: RotateCcw,
-    description: "Find out whether an order is eligible for a return.",
-    question: "Can I return order 123?",
-  },
-  {
-    name: "Product availability",
-    icon: Backpack,
-    description:
-      "Ask whether an outdoor product is available in a particular size or color.",
-    question: "Do you have snowboard boots in size 10?",
-  },
-  {
-    name: "Troubleshooting",
-    icon: SearchX,
-    description:
-      "Try an order number that doesn’t exist to see how the agent handles an unsuccessful lookup.",
-    question: "Can you check order 999?",
-  },
+const questions = [
+  "What’s the status of order 123?",
+  "Can I return order 123?",
+  "Do you have snowboard boots in size 10?",
+  "Can you find order 999?",
 ];
-function ReferenceContent({
+export function DemoGuide({
   orders,
   products,
+  id,
 }: {
   orders: OrderReference[];
   products: ProductReference[];
+  id?: string;
 }) {
-  const [tab, setTab] = useState("orders");
+  const [copied, setCopied] = useState<number | null>(null);
   return (
-    <>
-      <div className="reference-tabs" aria-label="Demo references">
-        <button
-          aria-pressed={tab === "orders"}
-          onClick={() => setTab("orders")}
-        >
-          Sample orders
-        </button>
-        <button
-          aria-pressed={tab === "products"}
-          onClick={() => setTab("products")}
-        >
-          Products to ask about
-        </button>
+    <section className="panel guide-panel" id={id}>
+      <div className="panel-head">
+        <div className="panel-label">
+          <BookOpen size={15} />
+          <h2>Demo guide & sample data</h2>
+        </div>
       </div>
-      {tab === "orders" ? (
-        <>
-          <p className="reference-caption">
-            These fictional orders are available for you to ask the agent about.
-          </p>
-          <div className="reference-records">
+      <div
+        className="guide-scroll"
+        tabIndex={0}
+        aria-label="Demo guide and sample data"
+      >
+        <section className="guide-section">
+          <h3>How to use</h3>
+          <ol className="guide-steps">
+            <li>
+              <b>1</b>
+              <span>
+                Click <strong>Start Call</strong> and allow microphone access.
+              </span>
+            </li>
+            <li>
+              <b>2</b>
+              <span>Ask about a sample order, return, or product.</span>
+            </li>
+            <li>
+              <b>3</b>
+              <span>Watch the conversation and tool execution.</span>
+            </li>
+          </ol>
+        </section>
+        <section className="guide-section">
+          <h3>Things to try</h3>
+          <p>Say these aloud during a call. Click to copy.</p>
+          <div className="guide-questions">
+            {questions.map((q, i) => (
+              <button
+                key={q}
+                title="Copy question to say aloud"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(q);
+                    setCopied(i);
+                  } catch {
+                    setCopied(null);
+                  }
+                }}
+              >
+                <span>“{q}”</span>
+                {copied === i ? (
+                  <Check size={13} aria-label="Copied" />
+                ) : (
+                  <Copy size={13} />
+                )}
+              </button>
+            ))}
+          </div>
+        </section>
+        <section className="guide-section">
+          <h3>Sample orders</h3>
+          <p>Fictional orders you can ask the agent about.</p>
+          <div className="guide-orders">
             {orders.map((o) => (
               <div className="order-record" key={o.order_number}>
                 <strong>{o.order_number}</strong>
@@ -94,164 +105,47 @@ function ReferenceContent({
               <small>Intentional test</small>
             </div>
           </div>
-        </>
-      ) : (
-        <>
-          <p className="reference-caption">
-            Use the product name, then ask about a size or color.
-          </p>
-          <div className="product-records">
+        </section>
+        <section className="guide-section">
+          <h3>Products</h3>
+          <p>Expand a product for real demo sizes, colors, and availability.</p>
+          <div className="guide-products">
             {products.map((p) => {
               const available = p.variants.filter((v) => v.quantity > 0),
                 unavailable = p.variants.filter((v) => v.quantity === 0);
               return (
-                <div className="product-record" key={p.product_name}>
-                  <strong>{p.product_name}</strong>
-                  <span>
-                    In stock:{" "}
-                    {available.map((v) => `${v.size} ${v.color}`).join(" · ")}
-                  </span>
-                  {unavailable.length > 0 && (
-                    <small>
-                      Out of stock:{" "}
-                      {unavailable
-                        .map((v) => `${v.size} ${v.color}`)
-                        .join(" · ")}
-                    </small>
-                  )}
-                </div>
+                <details key={p.product_name}>
+                  <summary>
+                    {p.product_name}
+                    <ChevronDown size={13} />
+                  </summary>
+                  <div className="guide-variants">
+                    <p>
+                      <strong>In stock</strong>
+                      {available.map((v) => (
+                        <span key={`${v.size}-${v.color}`}>
+                          {v.size} · {v.color}{" "}
+                          <small>({v.quantity} available)</small>
+                        </span>
+                      ))}
+                    </p>
+                    {unavailable.length > 0 && (
+                      <p>
+                        <strong>Out of stock</strong>
+                        {unavailable.map((v) => (
+                          <span key={`${v.size}-${v.color}`}>
+                            {v.size} · {v.color}
+                          </span>
+                        ))}
+                      </p>
+                    )}
+                  </div>
+                </details>
               );
             })}
           </div>
-        </>
-      )}
-    </>
-  );
-}
-export function DemoGuide({
-  orders,
-  products,
-  active,
-}: {
-  orders: OrderReference[];
-  products: ProductReference[];
-  active: boolean;
-}) {
-  const [selected, setSelected] = useState(0),
-    [copied, setCopied] = useState(false),
-    [manualExpanded, setManualExpanded] = useState<boolean | null>(null);
-  const expanded = manualExpanded ?? !active,
-    scenario = scenarios[selected];
-  return (
-    <section
-      className={`reviewer-guide ${expanded ? "" : "is-collapsed"}`}
-      aria-label="Demo guide and references"
-    >
-      {expanded ? (
-        <>
-          <div className="getting-started">
-            <div className="onboarding-heading">
-              <h2>How to try the demo</h2>
-              <button
-                className="guide-toggle"
-                onClick={() => setManualExpanded(false)}
-                aria-expanded={true}
-              >
-                <ChevronUp size={14} />
-                Hide guide
-              </button>
-            </div>
-            <ol className="demo-steps">
-              <li>
-                <b>1</b>
-                <span>
-                  Click <strong>Start Call</strong> and allow microphone access.
-                </span>
-              </li>
-              <li>
-                <b>2</b>
-                <span>
-                  Ask about a sample <strong>order, return, or product.</strong>
-                </span>
-              </li>
-              <li>
-                <b>3</b>
-                <span>
-                  Watch the <strong>conversation and tools</strong> update in
-                  real time.
-                </span>
-              </li>
-            </ol>
-            <div className="things-heading">
-              <h3>Things to try</h3>
-              <span>Say these aloud during a call.</span>
-            </div>
-            <div className="scenario-tabs" aria-label="Supported scenarios">
-              {scenarios.map((s, i) => {
-                const Icon = s.icon;
-                return (
-                  <button
-                    key={s.name}
-                    aria-pressed={selected === i}
-                    onClick={() => {
-                      setSelected(i);
-                      setCopied(false);
-                    }}
-                  >
-                    <Icon size={13} />
-                    {s.name}
-                  </button>
-                );
-              })}
-            </div>
-            <div className="scenario-detail">
-              <p>{scenario.description}</p>
-              <div className="scenario-question">
-                <blockquote>“{scenario.question}”</blockquote>
-                <button
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(scenario.question);
-                      setCopied(true);
-                    } catch {
-                      setCopied(false);
-                    }
-                  }}
-                  aria-label="Copy question"
-                >
-                  {copied ? <Check size={13} /> : <Copy size={13} />}
-                  <span>{copied ? "Copied" : "Copy"}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          <div className="reference-card desktop-reference">
-            <ReferenceContent orders={orders} products={products} />
-          </div>
-          <details className="reference-card mobile-reference">
-            <summary>
-              Sample orders & products
-              <ChevronDown size={14} />
-            </summary>
-            <ReferenceContent orders={orders} products={products} />
-          </details>
-        </>
-      ) : (
-        <div className="collapsed-guide">
-          <span>
-            <strong>Demo guide</strong> · Ask about orders, returns, or outdoor
-            gear.
-          </span>
-          <button
-            className="guide-toggle"
-            onClick={() => setManualExpanded(true)}
-            aria-expanded={false}
-          >
-            <ChevronDown size={14} />
-            Show guide & references
-          </button>
-        </div>
-      )}
+        </section>
+      </div>
     </section>
   );
 }

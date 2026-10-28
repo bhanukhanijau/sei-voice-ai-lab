@@ -16,7 +16,7 @@ export function Conversation({
       scroller.current.scrollTop = scroller.current.scrollHeight;
   }, [messages]);
   return (
-    <section className="panel conversation-panel">
+    <section className="panel conversation-panel" id="conversation">
       <div className="panel-head">
         <div className="panel-label">
           <MessageSquare size={16} />
