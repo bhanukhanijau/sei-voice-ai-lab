@@ -6,6 +6,7 @@ import { shouldFollow } from "@/lib/timeline";
 import {
   conversationText,
   conversationLabel,
+  conversationActivity,
   type ConversationMessage,
 } from "@/lib/conversation";
 export function Conversation({
@@ -19,6 +20,8 @@ export function Conversation({
     if (follow.current && scroller.current)
       scroller.current.scrollTop = scroller.current.scrollHeight;
   }, [messages]);
+  const visible = messages.filter((m) => conversationText(m).trim());
+  const activity = conversationActivity(messages);
   return (
     <section className="panel conversation-panel" id="conversation">
       <div className="panel-head">
@@ -26,7 +29,7 @@ export function Conversation({
           <MessageSquare size={16} />
           <h2>Conversation</h2>
         </div>
-        <span className="badge">{messages.length} messages</span>
+        <span className="badge">{visible.length} messages</span>
       </div>
       <div
         ref={scroller}
@@ -42,15 +45,15 @@ export function Conversation({
           );
         }}
       >
-        {messages.length ? (
-          messages.map((m) => (
+        {visible.length ? (
+          visible.map((m) => (
             <div className={`conversation-message ${m.role}`} key={m.id}>
               <span className="speaker-mark">
                 {m.role === "user" ? "Y" : "S"}
               </span>
               <div>
                 <small>{m.role === "user" ? "YOU" : "SEI SUPPORT"}</small>
-                <p>{conversationText(m) || "Listening for speech text…"}</p>
+                <p>{conversationText(m)}</p>
                 <span className="message-evidence">{conversationLabel(m)}</span>
               </div>
             </div>
@@ -69,8 +72,11 @@ export function Conversation({
           </div>
         )}
       </div>
+      <div className="conversation-activity" role="status" aria-live="polite">
+        {activity}
+      </div>
       <div className="conversation-footer">
-        <span>Live transcripts · Generated text marked provisional</span>
+        <span>Speech transcripts · Updates from Vapi</span>
         <Button
           onClick={() => {
             follow.current = true;

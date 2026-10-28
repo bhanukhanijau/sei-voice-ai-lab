@@ -400,7 +400,7 @@ export default function Lab({
               <div>
                 <div className="eyebrow">READY FOR OUTSIDE. HERE TO HELP.</div>
                 <h1>Meet your SEI AI Support Agent</h1>
-                <p>
+                <p className="hero-brand-description">
                   SEI Outdoors is a fictional retailer of camping, hiking, snow
                   sports, and outdoor equipment.
                 </p>

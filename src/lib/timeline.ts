@@ -106,7 +106,7 @@ export function normalizeEvent(
     add({
       kind: "interruption",
       title: "Assistant interrupted",
-      text: "Vapi reported an interruption.",
+      text: "Direct Vapi user-interrupted event received.",
     });
     state.live = "";
   } else if (
