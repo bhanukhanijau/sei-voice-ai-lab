@@ -38,14 +38,29 @@ export function ExecutionTimeline({
       <div className="panel-head">
         <h2>Execution timeline</h2>
         <div className="timeline-controls">
-          <Button aria-pressed={!rawView} onClick={() => setRawView(false)}>
-            Timeline
-          </Button>
-          <Button aria-pressed={rawView} onClick={() => setRawView(true)}>
-            Raw Events ({timeline.raw.length})
-          </Button>
+          <div
+            className="timeline-view-toggle"
+            role="group"
+            aria-label="Event view"
+          >
+            <button
+              type="button"
+              aria-pressed={!rawView}
+              onClick={() => setRawView(false)}
+            >
+              Timeline
+            </button>
+            <button
+              type="button"
+              aria-pressed={rawView}
+              onClick={() => setRawView(true)}
+            >
+              Raw Events ({timeline.raw.length})
+            </button>
+          </div>
           {rawView && (
             <Button
+              variant="ghost"
               onClick={async () => {
                 await navigator.clipboard.writeText(
                   JSON.stringify(timeline.raw, null, 2),

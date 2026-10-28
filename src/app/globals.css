@@ -715,9 +715,37 @@ footer {
   gap: 6px;
   flex-wrap: wrap;
 }
-.timeline-controls [aria-pressed="true"] {
+.timeline-view-toggle {
+  display: inline-grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--input);
+}
+.timeline-view-toggle button {
+  border: 0;
+  padding: 4px 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 1.6;
+  white-space: nowrap;
+}
+.timeline-view-toggle button:first-child {
+  border-radius: 5px 0 0 5px;
+}
+.timeline-view-toggle button:last-child {
+  border-radius: 0 5px 5px 0;
+  border-left: 1px solid var(--line);
+}
+.timeline-view-toggle button[aria-pressed="true"] {
   color: var(--accent);
-  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 13%, var(--panel));
+}
+.timeline-view-toggle button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
 }
 .timeline-note {
   font-size: 11px;
@@ -2359,7 +2387,7 @@ footer {
   min-height: 0;
   min-width: 0;
   flex: 1;
-  overflow-y: auto;
+  overflow-y: scroll;
   overflow-anchor: none;
   padding-right: 6px;
 }
@@ -2780,56 +2808,30 @@ footer {
 .guide-panel .panel-head h2 {
   font-weight: 700;
 }
-.guide-scroll-shell {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-}
-.guide-scroll-shell .guide-scroll {
-  height: 100%;
-  scrollbar-width: auto;
-  scrollbar-color: var(--accent) var(--input);
+.guide-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--accent) 65%, var(--panel))
+    var(--input);
   scrollbar-gutter: stable;
 }
-.guide-scroll::-webkit-scrollbar {
-  width: 9px;
-}
-.guide-scroll::-webkit-scrollbar-track {
-  background: var(--input);
-  border-radius: 8px;
-}
-.guide-scroll::-webkit-scrollbar-thumb {
-  background: var(--accent);
-  border: 2px solid var(--input);
-  border-radius: 8px;
-}
-.guide-scroll-shell.has-above::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 12px;
-  height: 14px;
-  background: linear-gradient(var(--panel), transparent);
-  pointer-events: none;
-  z-index: 1;
-}
-.guide-scroll-hint {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 12px;
-  height: 42px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 5px;
-  padding-bottom: 3px;
-  background: linear-gradient(transparent, var(--panel) 65%);
-  color: var(--accent);
-  font-size: 11px;
-  font-weight: 600;
-  pointer-events: none;
+/* Prefer one persistent, custom native scrollbar where WebKit styling is supported. */
+@supports selector(::-webkit-scrollbar) {
+  .guide-scroll {
+    scrollbar-width: auto;
+    scrollbar-color: auto;
+  }
+  .guide-scroll::-webkit-scrollbar {
+    width: 6px;
+    background: var(--input);
+  }
+  .guide-scroll::-webkit-scrollbar-track {
+    background: var(--input);
+    border-radius: 6px;
+  }
+  .guide-scroll::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--accent) 65%, var(--panel));
+    border-radius: 6px;
+  }
 }
 .guide-content {
   padding-bottom: 12px;
@@ -2881,43 +2883,10 @@ footer {
   line-height: 1.5;
 }
 @media (max-width: 780px) {
-  .guide-scroll-shell {
-    flex: none;
-  }
-  .guide-scroll-shell .guide-scroll {
-    height: auto;
-  }
-  .guide-scroll-hint,
-  .guide-scroll-shell.has-above::before {
-    display: none;
-  }
   .playground-intro .hero-support {
     font-size: 12px;
   }
 }
-/* An always-visible position cue also covers systems that hide native scrollbars. */
-.guide-scroll-rail {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 5px;
-  border-radius: 5px;
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
-  pointer-events: none;
-}
-.guide-scroll-rail span {
-  position: absolute;
-  width: 100%;
-  border-radius: inherit;
-  background: color-mix(in srgb, var(--accent) 65%, var(--panel));
-}
-@media (max-width: 780px) {
-  .guide-scroll-rail {
-    display: none;
-  }
-}
-
 /* Keep speech preparation out of the transcript and reserve its small status row. */
 .conversation-activity {
   min-height: 22px;
