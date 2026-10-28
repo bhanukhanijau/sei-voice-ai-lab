@@ -8,11 +8,15 @@ import {
   ExternalLink,
   BookOpen,
   ChevronDown,
+  Code2,
+  Database,
+  FileCode2,
   Headphones,
   Mic,
   PhoneOff,
   Play,
   Sun,
+  Workflow,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import type { Mode } from "@/lib/catalog";
@@ -322,6 +326,49 @@ export default function Lab({
             );
           })}
         </nav>
+        <section className="sidebar-source" aria-labelledby="source-heading">
+          <h2 id="source-heading">Under the Hood</h2>
+          <div className="sidebar-source-links">
+            {[
+              {
+                label: "View Source Code",
+                path: "",
+                title: "Full application repository.",
+                icon: Code2,
+              },
+              {
+                label: "Tool Definitions",
+                path: "/blob/main/src/lib/catalog.ts",
+                title: "Function names, descriptions, schemas, and examples.",
+                icon: FileCode2,
+              },
+              {
+                label: "Mock Data & Business Logic",
+                path: "/blob/main/src/lib/business.ts",
+                title:
+                  "Fictional orders, inventory, returns, and customer information.",
+                icon: Database,
+              },
+              {
+                label: "Execution Engine",
+                path: "/blob/main/src/lib/engine.ts",
+                title: "Tool execution and failure simulation.",
+                icon: Workflow,
+              },
+            ].map(({ label, path, title, icon: Icon }) => (
+              <a
+                key={label}
+                href={`https://github.com/bhanukhanijau/sei-voice-ai-lab${path}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={title}
+              >
+                <Icon size={14} aria-hidden="true" />
+                <span>{label}</span>
+              </a>
+            ))}
+          </div>
+        </section>
         <div className="sidebar-bottom">
           <div className="sidebar-utilities">
             <p className="nav-label">UTILITIES</p>
