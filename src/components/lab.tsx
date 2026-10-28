@@ -20,6 +20,7 @@ import {
   DemoGuide,
   microphoneMessage,
   type OrderReference,
+  type ProductReference,
 } from "./demo-guide";
 import { ExecutionTimeline } from "./execution-timeline";
 import {
@@ -107,8 +108,10 @@ function PromptInstructions() {
 
 export default function Lab({
   orderReference,
+  productReference,
 }: {
   orderReference: OrderReference[];
+  productReference: ProductReference[];
 }) {
   const [boot, setBoot] = useState<Config | null>(null),
     [error, setError] = useState(""),
@@ -330,7 +333,7 @@ export default function Lab({
           <div>
             <Button
               onClick={() => document.documentElement.classList.toggle("light")}
-              aria-label="Toggle light mode"
+              aria-label="Toggle color theme"
             >
               <Sun size={15} />
             </Button>
@@ -349,17 +352,14 @@ export default function Lab({
             <div className="playground-intro">
               <div>
                 <div className="eyebrow">READY FOR OUTSIDE. HERE TO HELP.</div>
-                <h1>
-                  SEI Outdoors <span>— AI Support Demo</span>
-                </h1>
+                <h1>Meet your SEI AI Support Agent</h1>
                 <p>
-                  Talk to our AI support agent about orders, returns, and
-                  outdoor gear. Watch the tools work in real time.
+                  Experience a voice-powered customer support agent that can
+                  check orders, answer return questions, and look up outdoor
+                  gear availability.
                 </p>
               </div>
-              <span className="fictional-label">
-                Fictional orders & customer data
-              </span>
+              <span className="fictional-label">INTERACTIVE VOICE DEMO</span>
             </div>
           ) : (
             <div className="heading">
@@ -455,11 +455,19 @@ export default function Lab({
                   </div>
                 )}
               </section>
-              <DemoGuide orders={orderReference} />
+              <DemoGuide
+                orders={orderReference}
+                products={productReference}
+                active={state !== "Disconnected"}
+              />
               <div className="playground-workspace">
                 <Conversation messages={messages} />
                 <ExecutionTimeline timeline={timeline} callId={callId} />
               </div>
+              <p className="public-demo-disclaimer">
+                Demo environment using fictional customer and order data. Voice
+                calls powered by Vapi.
+              </p>
             </>
           )}
           {page === "Tools & Debugger" && (
